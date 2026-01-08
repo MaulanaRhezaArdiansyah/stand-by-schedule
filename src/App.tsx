@@ -33,7 +33,7 @@ function App() {
       roles: {
         FO: 'Dirga El-Form',
         MO: 'Alawi El-SatuSehat',
-        BO: 'Miftah El-Inventori'
+        BO: 'Miftah El-Stok'
       }
     },
     {
@@ -53,7 +53,7 @@ function App() {
         ],
         BO: [
           { name: 'Rine El-Jasmed', time: '17.00-20.00' },
-          { name: 'Maul El-WebApp', time: '20.00-22.00' }
+          { name: 'Maul El-Inventori', time: '20.00-22.00' }
         ]
       }
     }
