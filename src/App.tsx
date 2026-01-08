@@ -47,7 +47,8 @@ function App() {
         ],
         BO: [
           { name: 'Rine', time: '17.00-20.00' },
-          { name: 'Maul', time: '20.00-22.00' }
+          { name: 'Maul', time: '20.00-22.00' },
+          { name: 'Ira', time: '20.00-22.00' }
         ]
       }
     }
