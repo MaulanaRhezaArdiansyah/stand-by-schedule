@@ -12,6 +12,12 @@ interface ScheduleItem {
   }
 }
 
+interface FlexibleTeamMember {
+  name: string
+  role: string
+  description: string
+}
+
 function App() {
   const [isVisible, setIsVisible] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState('')
@@ -47,10 +53,22 @@ function App() {
         ],
         BO: [
           { name: 'Rine', time: '17.00-20.00' },
-          { name: 'Maul', time: '20.00-22.00' },
-          { name: 'Ira', time: '20.00-22.00' }
+          { name: 'Maul', time: '20.00-22.00' }
         ]
       }
+    }
+  ]
+
+  const flexibleTeam: FlexibleTeamMember[] = [
+    {
+      name: 'Ira',
+      role: 'Back Office - HRIS',
+      description: 'On-call untuk support HRIS'
+    },
+    {
+      name: 'Chabib',
+      role: 'Server Engineer',
+      description: 'On-call untuk infrastructure & server'
     }
   ]
 
@@ -145,6 +163,27 @@ function App() {
             </div>
           </div>
         ))}
+
+        <div className="schedule-card flexible-card">
+          <div className="schedule-header">
+            <h2>⚡ Tim Fleksibel / On-Call</h2>
+            <div className="schedule-meta">
+              <span className="date">📞 Dapat dihubungi kapan saja saat dibutuhkan</span>
+            </div>
+          </div>
+
+          <div className="flexible-team-grid">
+            {flexibleTeam.map((member, idx) => (
+              <div key={idx} className="flexible-member">
+                <div className="member-info">
+                  <h4 className="member-name">{member.name}</h4>
+                  <p className="member-role">{member.role}</p>
+                  <p className="member-description">{member.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
 
       <footer className="footer">
