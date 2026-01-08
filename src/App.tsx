@@ -31,29 +31,29 @@ function App() {
       date: '8 Januari 2026 - 9 Januari 2026',
       time: '23.30 - 02.00',
       roles: {
-        FO: 'Dirga',
-        MO: 'Alawi',
-        BO: 'Miftah'
+        FO: 'Dirga El-Form',
+        MO: 'Alawi El-SatuSehat',
+        BO: 'Miftah El-Inventori'
       }
     },
     {
-      title: 'Jadwal Stand By',
+      title: 'Jadwal Stand By Go Live',
       date: '9 Januari 2026',
       time: '17.00 - 22.00',
       roles: {
         FO: [
-          { name: 'Hilmi', time: '17.00-19.00' },
-          { name: 'Ardan', time: '19.00-21.00' },
-          { name: 'Pak Rizal', time: '21.00-22.00' }
+          { name: 'Hilmi El-Casemix', time: '17.00-19.00' },
+          { name: 'Ardan El-Imoet', time: '19.00-21.00' },
+          { name: 'Pak Rizal El-RL', time: '21.00-22.00' }
         ],
         MO: [
           { name: 'Rheza', time: '17.00-19.00' },
-          { name: 'Vigo', time: '19.00-21.00' },
-          { name: 'Farhan', time: '21.00-22.00' }
+          { name: 'Vigo El-Apol', time: '19.00-21.00' },
+          { name: 'Farhan El-BBM', time: '21.00-22.00' }
         ],
         BO: [
-          { name: 'Rine', time: '17.00-20.00' },
-          { name: 'Maul', time: '20.00-22.00' }
+          { name: 'Rine El-Jasmed', time: '17.00-20.00' },
+          { name: 'Maul El-WebApp', time: '20.00-22.00' }
         ]
       }
     }
@@ -61,17 +61,17 @@ function App() {
 
   const flexibleTeam: FlexibleTeamMember[] = [
     {
-      name: 'Ira',
+      name: 'Ira El-Revo',
       role: 'Back Office - HRIS',
       description: 'On-call untuk support HRIS'
     },
     {
-      name: 'Chabib',
-      role: 'Server Engineer',
+      name: 'Chabib El-Server',
+      role: 'DevOps Engineer',
       description: 'On-call untuk infrastructure & server'
     },
     {
-      name: 'Neza',
+      name: 'Neza El-PO',
       role: 'Product Owner',
       description: 'On-call untuk keputusan produk & prioritas'
     }
