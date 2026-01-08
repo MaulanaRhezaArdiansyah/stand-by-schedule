@@ -1,0 +1,42 @@
+========================================
+  CARA DEPLOY SEKARANG - PILIH SALAH SATU
+========================================
+
+OPSI 1: PALING MUDAH - Via Netlify Drop (2 menit)
+--------------------------------------------------
+1. Folder 'dist' sudah di-build dan siap deploy
+2. Buka: https://app.netlify.com/drop
+3. Drag & drop folder 'dist' ke halaman tersebut
+4. DONE! Anda langsung dapat domain gratis
+
+OPSI 2: Via Vercel CLI (5 menit)
+---------------------------------
+Jalankan command ini di terminal:
+
+    vercel --prod
+
+Browser akan terbuka untuk login. Setelah login, deploy otomatis.
+Domain yang akan Anda dapat: https://stand-by-schedule-xxxxx.vercel.app
+
+OPSI 3: Via GitHub + Vercel (10 menit, tapi auto-deploy di masa depan)
+----------------------------------------------------------------------
+1. Buat repo baru di GitHub
+2. Jalankan commands ini:
+
+    git remote add origin https://github.com/USERNAME/stand-by-schedule.git
+    git push -u origin main
+
+3. Kunjungi https://vercel.com/new
+4. Import repository yang baru dibuat
+5. Click Deploy
+6. DONE! Setiap git push akan auto-deploy ke production
+
+========================================
+
+REKOMENDASI: Gunakan Opsi 1 (Netlify Drop) untuk deploy paling cepat!
+
+File yang perlu di-deploy: folder 'dist' (sudah di-build)
+
+Lokasi folder dist: C:\typescript\stand-by-schedule\dist
+
+========================================
