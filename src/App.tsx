@@ -27,7 +27,7 @@ function App() {
 
   const schedules: ScheduleItem[] = [
     {
-      title: 'Jadwal Stand By Go Live',
+      title: 'Jadwal Stand By',
       date: '8 Januari 2026 - 9 Januari 2026',
       time: '23.30 - 02.00',
       roles: {
@@ -37,7 +37,7 @@ function App() {
       }
     },
     {
-      title: 'Jadwal Stand By Go Live',
+      title: 'Jadwal Stand By',
       date: '9 Januari 2026',
       time: '17.00 - 22.00',
       roles: {
@@ -132,7 +132,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>📋 Jadwal Stand By Go Live</h1>
+        <h1>📋 Go Live Rayhan</h1>
         <div className="countdown">
           <p>Halaman akan otomatis takedown dalam:</p>
           <div className="timer">{timeRemaining}</div>
