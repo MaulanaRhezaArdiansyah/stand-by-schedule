@@ -27,7 +27,7 @@ function App() {
       roles: {
         FO: 'Dirga',
         MO: 'Alawi',
-        BO: 'mip'
+        BO: 'Miftah'
       }
     },
     {
@@ -46,8 +46,8 @@ function App() {
           { name: 'Farhan', time: '21.00-22.00' }
         ],
         BO: [
-          { name: 'rine', time: '17.00-20.00' },
-          { name: 'maul', time: '20.00-22.00' }
+          { name: 'Rine', time: '17.00-20.00' },
+          { name: 'Maul', time: '20.00-22.00' }
         ]
       }
     }
