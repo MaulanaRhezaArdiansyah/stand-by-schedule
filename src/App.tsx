@@ -69,6 +69,11 @@ function App() {
       name: 'Chabib',
       role: 'Server Engineer',
       description: 'On-call untuk infrastructure & server'
+    },
+    {
+      name: 'Neza',
+      role: 'Product Owner',
+      description: 'On-call untuk keputusan produk & prioritas'
     }
   ]
 
