@@ -6,15 +6,21 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
 }
 
 .app {
   min-height: 100vh;
   background: #0a0e27;
   position: relative;
-  overflow: hidden;
   padding: 2rem;
 }
 
@@ -29,13 +35,20 @@ body {
     radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
     radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
-  animation: gradientShift 15s ease infinite;
+  animation: gradientShift 20s ease-in-out infinite;
   z-index: 0;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 @keyframes gradientShift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(-30px, 30px) rotate(180deg); }
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-30px, 30px, 0) rotate(180deg);
+  }
 }
 
 .header {
@@ -60,8 +73,8 @@ body {
 
 .countdown {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 2rem;
   border-radius: 20px;
   max-width: 500px;
@@ -70,6 +83,7 @@ body {
   box-shadow:
     0 8px 32px 0 rgba(31, 38, 135, 0.37),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  transform: translateZ(0);
 }
 
 .countdown p {
@@ -103,8 +117,8 @@ body {
 
 .schedule-card {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 24px;
   padding: 2.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -112,11 +126,13 @@ body {
     0 8px 32px 0 rgba(0, 0, 0, 0.37),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   animation: slideUp 0.6s ease-out;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .schedule-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-5px) translateZ(0);
   border-color: rgba(99, 102, 241, 0.3);
   box-shadow:
     0 20px 60px 0 rgba(99, 102, 241, 0.3),
@@ -165,9 +181,10 @@ body {
   padding: 1.8rem;
   border-radius: 18px;
   border: 1px solid;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
 }
 
 .role-section::before {
@@ -232,7 +249,6 @@ body {
 
 .person {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
   padding: 1rem 1.4rem;
   border-radius: 12px;
   color: #f1f5f9;
@@ -240,7 +256,8 @@ body {
   font-size: 1.05rem;
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  transform: translateZ(0);
 }
 
 .person:hover {
@@ -256,20 +273,20 @@ body {
 
 .person-shift {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
   padding: 1rem 1.4rem;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transform: translateZ(0);
 }
 
 .person-shift:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.2);
-  transform: translateX(5px);
+  transform: translateX(5px) translateZ(0);
 }
 
 .person-shift .name {
@@ -307,13 +324,13 @@ body {
 
 .flexible-member {
   background: rgba(139, 92, 246, 0.1);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(139, 92, 246, 0.25);
   border-radius: 16px;
   padding: 1.8rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
 }
 
 .flexible-member::before {
@@ -326,7 +343,7 @@ body {
 }
 
 .flexible-member:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px) translateZ(0);
   background: rgba(139, 92, 246, 0.15);
   border-color: rgba(139, 92, 246, 0.4);
   box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
