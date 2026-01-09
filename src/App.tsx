@@ -47,7 +47,7 @@ function App() {
           { name: 'Pak Rizal El-RL', time: '21.00-22.00' }
         ],
         MO: [
-          { name: 'Rheza', time: '17.00-19.00' },
+          { name: 'Rheza El-Refactor', time: '17.00-19.00' },
           { name: 'Vigo El-Apol', time: '19.00-21.00' },
           { name: 'Farhan El-Labor', time: '21.00-22.00' }
         ],
@@ -70,7 +70,7 @@ function App() {
         ],
         MO: [
           { name: 'Alawi El-SatuSehat', time: '22.00-23.00' },
-          { name: 'Rheza', time: '23.00-00.00' },
+          { name: 'Rheza El-Refactor', time: '23.00-00.00' },
           { name: 'Vigo El-Apol', time: '00.00-01.00' },
           { name: 'Farhan El-Labor', time: '01.00-02.00' }
         ],
