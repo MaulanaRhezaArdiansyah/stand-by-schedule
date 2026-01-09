@@ -22,8 +22,8 @@ function App() {
   const [isVisible, setIsVisible] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState('')
 
-  // Tanggal takedown: 10 Oktober 2026 pukul 10:00
-  const takedownDate = new Date('2026-10-10T10:00:00+07:00')
+  // Tanggal takedown: 10 Januari 2026 pukul 10:00
+  const takedownDate = new Date('2026-01-10T10:00:00+07:00')
 
   const schedules: ScheduleItem[] = [
     {
@@ -232,7 +232,7 @@ function App() {
             Jangan lupa input jam lembur di <strong>Revo HRIS</strong>!
           </p>
         </div>
-        <p>Stand By Schedule System • Auto-takedown: 10 Okt 2026, 10:00 WIB</p>
+        <p>Stand By Schedule System • Auto-takedown: 10 Jan 2026, 10:00 WIB</p>
       </footer>
     </div>
   )
