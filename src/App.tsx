@@ -86,7 +86,7 @@ function App() {
       date: '10 Januari 2026',
       time: '05.00 - 07.00',
       roles: {
-        FO: 'Dirga El-Form & Hilmi El-Casemix',
+        FO: 'Dirga El-Form & Ardan El-Imoet',
         MO: 'Alawi El-SatuSehat & Rheza El-Refactor',
         BO: '-'
       }
