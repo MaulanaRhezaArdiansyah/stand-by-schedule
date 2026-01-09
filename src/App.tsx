@@ -22,8 +22,8 @@ function App() {
   const [isVisible, setIsVisible] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState('')
 
-  // Tanggal takedown: 9 Januari 2026 pukul 23:55
-  const takedownDate = new Date('2026-01-09T23:55:00+07:00')
+  // Tanggal takedown: 10 Oktober 2026 pukul 10:00
+  const takedownDate = new Date('2026-10-10T10:00:00+07:00')
 
   const schedules: ScheduleItem[] = [
     {
@@ -142,7 +142,7 @@ function App() {
     return (
       <div className="takedown-message">
         <h1>⏰ Jadwal Sudah Tidak Aktif</h1>
-        <p>Halaman ini sudah tidak tersedia sejak 9 Januari 2026, 23:55 WIB</p>
+        <p>Halaman ini sudah tidak tersedia sejak 10 Oktober 2026, 10:00 WIB</p>
       </div>
     )
   }
@@ -226,7 +226,13 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>Stand By Schedule System • Auto-takedown: 9 Jan 2026, 23:55 WIB</p>
+        <div className="footer-note">
+          <p className="overtime-note">
+            ⚠️ <strong>Catatan Penting:</strong> Jadwal stand by ini berlaku sebagai <strong>overtime</strong>.
+            Jangan lupa input jam lembur di <strong>Revo HRIS</strong>!
+          </p>
+        </div>
+        <p>Stand By Schedule System • Auto-takedown: 10 Okt 2026, 10:00 WIB</p>
       </footer>
     </div>
   )
