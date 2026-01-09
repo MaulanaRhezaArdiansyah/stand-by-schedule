@@ -49,7 +49,7 @@ function App() {
         MO: [
           { name: 'Rheza', time: '17.00-19.00' },
           { name: 'Vigo El-Apol', time: '19.00-21.00' },
-          { name: 'Farhan El-BBM', time: '21.00-22.00' }
+          { name: 'Farhan El-Labor', time: '21.00-22.00' }
         ],
         BO: [
           { name: 'Rine El-Jasmed', time: '17.00-20.00' },
@@ -72,7 +72,7 @@ function App() {
           { name: 'Alawi El-SatuSehat', time: '22.00-23.00' },
           { name: 'Rheza', time: '23.00-00.00' },
           { name: 'Vigo El-Apol', time: '00.00-01.00' },
-          { name: 'Farhan El-BBM', time: '01.00-02.00' }
+          { name: 'Farhan El-Labor', time: '01.00-02.00' }
         ],
         BO: [
           { name: 'Miftah El-Stok', time: '22.00-23.00' },
