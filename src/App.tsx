@@ -63,22 +63,32 @@ function App() {
       time: '22.00 - 02.00',
       roles: {
         FO: [
-          { name: 'Dirga El-Form', time: '22.00-23.00' },
+          { name: 'Dirga El-Form 🔀 Merger', time: '22.00-23.00' },
           { name: 'Hilmi El-Casemix', time: '23.00-00.00' },
           { name: 'Ardan El-Imoet', time: '00.00-01.00' },
           { name: 'Pak Rizal El-RL', time: '01.00-02.00' }
         ],
         MO: [
-          { name: 'Alawi El-SatuSehat', time: '22.00-23.00' },
-          { name: 'Rheza El-Refactor', time: '23.00-00.00' },
-          { name: 'Vigo El-Apol', time: '00.00-01.00' },
+          { name: 'Vigo El-Apol', time: '22.00-23.00' },
+          { name: 'Rheza El-Refactor 🔀 Merger', time: '23.00-00.00' },
+          { name: 'Alawi El-SatuSehat 🔀 Merger', time: '00.00-01.00' },
           { name: 'Farhan El-Labor', time: '01.00-02.00' }
         ],
         BO: [
-          { name: 'Miftah El-Stok', time: '22.00-23.00' },
+          { name: 'Miftah El-Stok 🔀 Merger', time: '22.00-23.00' },
           { name: 'Rine El-Jasmed', time: '23.00-00.00' },
           { name: 'Maul El-Inventori', time: '00.00-01.00' }
         ]
+      }
+    },
+    {
+      title: 'Jadwal Stand By',
+      date: '10 Januari 2026',
+      time: '05.00 - 07.00',
+      roles: {
+        FO: 'Dirga El-Form & Hilmi El-Casemix',
+        MO: 'Alawi El-SatuSehat & Rheza El-Refactor',
+        BO: '-'
       }
     }
   ]
