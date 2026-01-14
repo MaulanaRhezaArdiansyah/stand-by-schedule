@@ -1,6 +1,6 @@
-# ✅ Render.com Deployment Checklist
+# ✅ PM2 Deployment Checklist
 
-Quick checklist sebelum deploy ke Render.com (FREE, NO CREDIT CARD).
+Quick checklist sebelum deploy dengan PM2 (laptop/server).
 
 ---
 
@@ -11,10 +11,10 @@ Quick checklist sebelum deploy ke Render.com (FREE, NO CREDIT CARD).
 - [x] Email scheduler - done
 - [x] Email templates - done
 - [x] Developer emails via env vars - done
-- [x] Render config files - done (Dockerfile, render.yaml)
+- [x] PM2 config file - done (ecosystem.config.js)
 
 ### 2. Environment Variables Ready
-Pastikan lu punya semua values ini buat Render:
+Pastikan `.env` file lu udah lengkap:
 
 ```env
 # Email Configuration (REQUIRED)
@@ -48,58 +48,49 @@ EMAIL_NEZA=<email>
 
 ## 🚀 Deployment Steps
 
-### Step 1: Push to GitHub
+### Step 1: Install PM2
 
 ```bash
-git add .
-git commit -m "Ready for Render deployment"
-git push origin main
+npm install -g pm2
 ```
 
-### Step 2: Render Setup
-
-1. Go to https://render.com
-2. Sign up with **GitHub** (NO CREDIT CARD NEEDED!)
-3. Click **"New +"** → **"Web Service"**
-4. Select `stand-by-schedule` repo
-5. Render auto-detects Docker (from Dockerfile)
-
-### Step 3: Configure Service
-
-```
-Name: standby-scheduler
-Region: Singapore
-Branch: main
-Runtime: Docker
-Instance Type: Free
+Verify:
+```bash
+pm2 --version
 ```
 
-### Step 4: Set Environment Variables
+### Step 2: Verify .env File
 
-Di service configuration page → **Environment Variables**:
+Pastikan `.env` file udah lengkap dengan semua variables dari checklist di atas.
 
-**Add semua environment variables dari checklist di atas**
+### Step 3: Start with PM2
 
-⚠️ IMPORTANT:
-- Jangan pake quotes
-- Ganti semua `<placeholder>` dengan value yang bener
-- Pastikan semua developer email udah diisi
+```bash
+# Start scheduler
+pm2 start ecosystem.config.js
 
-### Step 5: Deploy
+# Check status
+pm2 status
+```
 
-Click **"Create Web Service"** button.
+### Step 4: Save PM2 Config
 
-Render akan:
-1. Clone repo
-2. Build Docker image with Bun
-3. Run `bun install`
-4. Run `bun run src/server/index.ts`
+```bash
+# Save process list
+pm2 save
 
-Build akan makan waktu ~2-3 menit.
+# Setup auto-start on boot
+pm2 startup
+```
 
-### Step 6: Verify
+Run command yang dikasih PM2, lalu:
+```bash
+pm2 save
+```
 
-Check Render Logs, harusnya liat:
+### Step 5: Verify
+
+Check PM2 logs:
 
 ```
 🚀 Starting Stand By Email Scheduler...
@@ -113,81 +104,103 @@ Check Render Logs, harusnya liat:
 
 ## 🧪 Testing After Deploy
 
-### Test 1: Check Logs
-- Render Dashboard → standby-scheduler → **Logs** tab
-- Verify no errors
-- Verify "Email scheduler is running!"
+### Test 1: Check PM2 Status
+```bash
+pm2 status
+```
+Status harus `online` (hijau)
 
-### Test 2: Check Health Endpoint
-- Render akan kasih URL (e.g., `https://standby-scheduler-xxx.onrender.com`)
-- Test: `curl https://your-url.onrender.com/health`
-- Response: `{"status":"ok","service":"standby-scheduler"}`
+### Test 2: Check Logs
+```bash
+pm2 logs standby-scheduler --lines 50
+```
+Verify:
+- ✅ Email configuration verified
+- ✅ Loaded schedules
+- ✅ Email scheduler is running
 
-### Test 3: Wait for Schedule
-- Wait until 17:00 WIB or 06:00 WIB
-- Check developer inbox
-- Verify email received
-
-### Test 4: Manual Test (Optional)
-Via Render Shell:
+### Test 3: Manual Test Email
 ```bash
 bun run test:email
 ```
+Check inbox untuk test email
+
+### Test 4: Wait for Schedule
+- Wait until 17:00 WIB or 06:00 WIB
+- Check developer inbox
+- Verify email received
 
 ---
 
 ## 📊 Monitoring
 
 ### Check Status
-Render Dashboard → standby-scheduler
-- Status should be **"Live"** (hijau)
+```bash
+pm2 status
+```
+Status harus `online` dengan uptime yang naik
 
-### Check Usage
-Render Dashboard → Account Settings → Usage
-- Free tier: 750 jam/bulan (cukup buat 24/7!)
-- Monitor usage biar ga over limit
+### Real-time Monitoring
+```bash
+pm2 monit
+```
+Shows CPU, memory usage, logs
 
 ### Update Schedule
 Kalo mau update schedule:
 1. Edit `src/server/index.ts` locally
-2. Commit & push
-3. Render **auto-redeploy** dalam 1-2 menit
+2. Reload PM2:
+   ```bash
+   pm2 reload standby-scheduler
+   ```
 
 ---
 
 ## 🔧 Troubleshooting
 
 ### Email ga terkirim?
-1. Check Render logs for errors
-2. Verify all environment variables set correctly
-3. Check EMAIL_PASSWORD (app-specific password, not regular password)
-4. Test manual: `bun run test:email` locally
+```bash
+pm2 logs standby-scheduler --lines 100 | grep -i error
+```
+1. Verify `.env` file complete
+2. Check EMAIL_PASSWORD (app-specific password)
+3. Test manual: `bun run test:email`
 
 ### Scheduler ga jalan?
-1. Check Render logs
-2. Verify TZ=Asia/Jakarta
-3. Manual restart: Render → Settings → Restart Service
+```bash
+pm2 status
+```
+If status `errored`:
+```bash
+pm2 logs standby-scheduler --err
+pm2 restart standby-scheduler
+```
 
-### Service keeps crashing?
-1. Check logs untuk error message
-2. Verify semua required env vars ada
-3. Check email config valid
+### PM2 ga auto-start?
+```bash
+pm2 unstartup
+pm2 startup
+# Run command yang dikasih
+pm2 save
+```
 
 ### Update developer emails?
-1. Render Dashboard → standby-scheduler → **Environment** tab
-2. Update EMAIL_* variables
-3. Click **"Save Changes"** → auto-restart
+1. Edit `.env` file
+2. Reload PM2:
+   ```bash
+   pm2 reload standby-scheduler
+   ```
 
 ---
 
 ## ✅ Post-Deployment
 
-- [ ] Verify scheduler running (status "Live")
+- [ ] PM2 status `online`
 - [ ] Verify email config valid (check logs)
-- [ ] Test health endpoint
-- [ ] Update all developer emails
-- [ ] Test email delivery (wait for scheduled time or run manual test)
-- [ ] Monitor Render usage (should be < 750 jam/bulan)
+- [ ] PM2 auto-start configured (`pm2 startup` & `pm2 save`)
+- [ ] Update all developer emails di `.env`
+- [ ] Test email delivery (manual test or wait for schedule)
+- [ ] Keep laptop awake settings configured
 
 ---
 
@@ -195,16 +208,29 @@ Kalo mau update schedule:
 
 **FREE** - $0/month
 
-Free tier includes:
-- 750 jam/bulan (perfect untuk 24/7 scheduler!)
-- Auto SSL/HTTPS
-- Auto-deploy dari GitHub
-- **NO CREDIT CARD** required
+Requirements:
+- Laptop/PC harus nyala 24/7
+- Stable internet connection
+- Electricity cost (kalo peduli 😅)
 
 ---
 
-**Deployment Guide**: [DEPLOY_RENDER.md](./DEPLOY_RENDER.md)
+## 💡 PM2 Quick Commands
+
+```bash
+pm2 status                     # Check status
+pm2 logs standby-scheduler     # View logs
+pm2 monit                      # Real-time monitoring
+pm2 restart standby-scheduler  # Restart
+pm2 reload standby-scheduler   # Reload (zero-downtime)
+pm2 stop standby-scheduler     # Stop
+pm2 save                       # Save config
+```
+
+---
+
+**Deployment Guide**: [DEPLOY_PM2.md](./DEPLOY_PM2.md)
 
 Good luck! 🚀
 
-Scheduler sekarang jalan 24/7 di cloud, ga perlu laptop nyala lagi!
+Scheduler jalan 24/7 di laptop lu (selama laptop nyala)!
