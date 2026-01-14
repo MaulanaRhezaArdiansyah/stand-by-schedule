@@ -1,137 +1,222 @@
-# Stand By Schedule - Jadwal Stand By Go Live
+# 📋 Stand By Schedule System
 
-Website untuk menampilkan jadwal stand by dengan fitur auto-takedown otomatis.
+Automated email reminder system for weekend stand-by schedules with monthly calendar view.
 
-## Fitur
+## 🎯 Features
 
-- **Countdown Timer Real-time**: Menampilkan berapa lama lagi sebelum website takedown
-- **Auto-Takedown**: Website otomatis menampilkan pesan "Tidak Aktif" setelah **9 Januari 2026, 23:55 WIB**
-- **Responsive Design**: Tampil optimal di semua device (mobile, tablet, desktop)
-- **Modern UI**: Desain yang menarik dengan gradient dan animasi
+### 📅 Monthly Schedule Calendar
+- Interactive table view with editable cells
+- Color-coded roles (Front Office, Middle Office, Back Office)
+- Notes and reminders sidebar
+- Responsive design with glassmorphism theme
 
-## Jadwal Stand By
+### 📧 Automated Email Reminders
+- **H-1 Reminder**: Sent at 17:00 WIB (day before stand-by)
+- **H Reminder**: Sent at 06:00 WIB (stand-by day)
+- Beautiful HTML email templates
+- Timezone-aware scheduling (Asia/Jakarta)
 
-### Periode 1: 8-9 Januari 2026 (23.30 - 02.00)
-- **FO** (Front Office): Dirga
-- **MO** (Middle Office): Alawi
-- **BO** (Back Office): mip
+---
 
-### Periode 2: 9 Januari 2026 (17.00 - 22.00)
+## 🚀 Quick Start
 
-**Front Office (FO):**
-- Hilmi (17.00-19.00)
-- Ardan (19.00-21.00)
-- Pak Rizal (21.00-22.00)
-
-**Middle Office (MO):**
-- Rheza (17.00-19.00)
-- Vigo (19.00-21.00)
-- Farhan (21.00-22.00)
-
-**Back Office (BO):**
-- rine (17.00-20.00)
-- maul (20.00-22.00)
-
-## Quick Start
+### Local Development
 
 ```bash
 # Install dependencies
 bun install
 
-# Run development server
+# Run web app (calendar view)
 bun run dev
 
-# Build for production
-bun run build
+# Run email scheduler
+bun run scheduler
 
-# Preview production build
-bun run preview
+# Test email sending
+bun run test:email
 ```
 
-## Deploy ke Production
-
-### Opsi 1: Vercel (Recommended - Gratis)
-
-**Via Command Line:**
-```bash
-# Login ke Vercel
-vercel login
-
-# Deploy
-vercel --prod
-```
-
-**Via GitHub:**
-1. Push code ke GitHub repository
-2. Kunjungi [vercel.com](https://vercel.com)
-3. Import repository Anda
-4. Klik Deploy
-5. Done! Anda akan dapat domain seperti: `https://stand-by-schedule.vercel.app`
-
-### Opsi 2: Netlify (Gratis)
-
-**Via Netlify Drop:**
-1. Build: `bun run build` (atau `npm run build`)
-2. Kunjungi [app.netlify.com/drop](https://app.netlify.com/drop)
-3. Drag & drop folder `dist`
-4. Done! Domain akan tersedia dalam beberapa detik
-
-**Via Command Line:**
-```bash
-npm install -g netlify-cli
-netlify login
-netlify deploy --prod
-```
-
-### Opsi 3: GitHub Pages (Gratis)
+### Check Scheduler Status
 
 ```bash
-npm install -D gh-pages
-# Tambahkan script "deploy" di package.json
-npm run deploy
+# Check if scheduler is running
+bun run scheduler:check
+
+# Stop scheduler
+bun run scheduler:stop
 ```
 
-## Tech Stack
+---
 
-- **React 19** - UI Framework
-- **TypeScript** - Type Safety
-- **Vite** - Build Tool & Dev Server
-- **Bun** - Package Manager & Runtime
-- **CSS3** - Styling dengan Gradients & Animations
+## 📦 Deployment
 
-## Project Structure
+### Option 1: Railway (Recommended - FREE)
+
+See [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) for complete guide.
+
+**Quick steps:**
+1. Push code to GitHub
+2. Connect to Railway
+3. Set environment variables
+4. Deploy!
+
+### Option 2: Local with PM2
+
+```bash
+bun install -g pm2
+pm2 start "bun run scheduler" --name "standby-scheduler"
+pm2 save
+pm2 startup
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and fill in:
+
+```env
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=Stand By Scheduler <your-email@gmail.com>
+TZ=Asia/Jakarta
+```
+
+### Developer Email Mapping
+
+Add email variables to `.env` file:
+
+```env
+# Developer Emails
+EMAIL_DIRGA=dirga@company.com
+EMAIL_HILMI=hilmi@company.com
+EMAIL_ARDAN=ardan@company.com
+# ... add all developers (see .env.example for complete list)
+```
+
+Emails are loaded from environment variables via `src/config/developerEmails.ts`
+
+### Schedule Data
+
+Edit `src/server/index.ts` to update monthly schedules:
+
+```typescript
+const monthlySchedules = [
+  {
+    month: 'Januari',
+    year: 2026,
+    schedules: [
+      { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
+      // ... add more dates
+    ]
+  }
+]
+```
+
+---
+
+## 📝 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Run web app development server |
+| `bun run build` | Build web app for production |
+| `bun run scheduler` | Start email scheduler |
+| `bun run scheduler:dev` | Start scheduler with auto-reload |
+| `bun run scheduler:check` | Check scheduler status |
+| `bun run scheduler:stop` | Stop all schedulers |
+| `bun run test:email` | Send test emails |
+
+---
+
+## 🏗️ Project Structure
 
 ```
 stand-by-schedule/
 ├── src/
-│   ├── App.tsx          # Main component dengan logic countdown & auto-takedown
-│   ├── App.css          # Styling
-│   ├── main.tsx         # Entry point
-│   └── index.css        # Global styles
-├── public/              # Static assets
-├── vercel.json          # Vercel configuration
-└── package.json         # Dependencies
+│   ├── App.tsx                    # React calendar view
+│   ├── config/
+│   │   └── developerEmails.ts     # Email mapping
+│   ├── services/
+│   │   ├── emailService.ts        # SMTP configuration
+│   │   ├── emailTemplates.ts      # HTML email templates
+│   │   └── scheduler.ts           # Cron job scheduler
+│   ├── server/
+│   │   └── index.ts               # Scheduler entry point
+│   └── test-email.ts              # Email testing script
+├── scripts/
+│   ├── check-scheduler.ps1        # Status checker
+│   └── stop-scheduler.ps1         # Stop script
+├── .env                           # Environment variables (gitignored)
+├── .env.example                   # Environment template
+├── railway.json                   # Railway config
+├── nixpacks.toml                  # Railway build config
+└── package.json                   # Dependencies & scripts
 ```
 
-## Cara Kerja Auto-Takedown
+---
 
-Website menggunakan `useEffect` hook yang berjalan setiap detik untuk mengecek waktu saat ini. Jika waktu sudah melewati **9 Januari 2026, 23:55 WIB**, maka:
-1. State `isVisible` berubah menjadi `false`
-2. Komponen otomatis me-render pesan takedown
-3. Jadwal tidak lagi ditampilkan
+## 📧 Email Templates
 
-## Domain Custom
+### H-1 Reminder (Yellow Theme)
+- Subject: "Reminder: Stand By Besok"
+- Sent: 17:00 WIB (day before)
+- Content: Schedule info, role, time, HRIS reminder
 
-Setelah deploy di Vercel/Netlify, Anda bisa tambahkan domain custom:
-1. Beli domain di Namecheap, Cloudflare, atau provider lain
-2. Di dashboard Vercel/Netlify, tambahkan custom domain
-3. Update DNS records sesuai instruksi
-4. Done!
+### H Reminder (Red Theme)
+- Subject: "Stand By Hari Ini - Jam 06.00"
+- Sent: 06:00 WIB (stand-by day)
+- Content: Urgent alert, checklist, HRIS reminder
 
-## Support
+---
 
-Untuk panduan lebih detail tentang deployment, lihat file `DEPLOYMENT.md`
+## 🔧 Troubleshooting
 
-## License
+### Email not sending?
+1. Check `.env` file - verify EMAIL_USER and EMAIL_PASSWORD
+2. For Gmail: Use app-specific password (not regular password)
+3. Check logs: `bun run scheduler` output
+4. Test manually: `bun run test:email`
 
-MIT License - Silakan digunakan untuk keperluan apapun
+### Scheduler not running?
+1. Check status: `bun run scheduler:check`
+2. Check timezone: `TZ=Asia/Jakarta` in `.env`
+3. Check Railway logs (if deployed)
+
+### Railway deployment issues?
+1. Check environment variables are set
+2. Check logs in Railway dashboard
+3. Verify build command: `bun install`
+4. Verify start command: `bun run scheduler`
+
+---
+
+## 📚 Documentation
+
+- [Quick Start Guide](./QUICK_START.md)
+- [Email Setup Guide](./EMAIL_SETUP.md)
+- [Railway Deployment](./DEPLOY_RAILWAY.md)
+
+---
+
+## 🛡️ Tech Stack
+
+- **Runtime**: Bun
+- **Frontend**: React + TypeScript + Vite
+- **Email**: Nodemailer
+- **Scheduler**: node-cron
+- **Deployment**: Railway (or PM2 local)
+
+---
+
+## 📄 License
+
+MIT
+
+---
+
+**Built with ❤️ for dev team stand-by scheduling**

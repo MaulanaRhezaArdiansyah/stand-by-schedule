@@ -1,239 +1,208 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './App.css'
 
-interface ScheduleItem {
-  title: string
-  date: string
-  time: string
-  roles: {
-    FO: string | Array<{ name: string; time: string }>
-    MO: string | Array<{ name: string; time: string }>
-    BO: string | Array<{ name: string; time: string }>
-  }
+interface DaySchedule {
+  date: number
+  day: string
+  frontOffice: string
+  middleOffice: string
+  backOffice: string
+  notes?: string
 }
 
-interface FlexibleTeamMember {
-  name: string
-  role: string
-  description: string
+interface MonthSchedule {
+  month: string
+  year: number
+  schedules: DaySchedule[]
+  monthNotes?: string[]
+}
+
+interface Cadangan {
+  backOffice: string
+  frontOffice: string
 }
 
 function App() {
-  const [isVisible, setIsVisible] = useState(true)
-  const [timeRemaining, setTimeRemaining] = useState('')
-
-  // Tanggal takedown: 10 Januari 2026 pukul 10:00
-  const takedownDate = new Date('2026-01-10T10:00:00+07:00')
-
-  const schedules: ScheduleItem[] = [
+  const [monthlySchedules, setMonthlySchedules] = useState<MonthSchedule[]>([
     {
-      title: 'Jadwal Stand By',
-      date: '8 Januari 2026 - 9 Januari 2026',
-      time: '23.30 - 02.00',
-      roles: {
-        FO: 'Dirga El-Form',
-        MO: 'Alawi El-SatuSehat',
-        BO: 'Miftah El-Stok'
-      }
-    },
-    {
-      title: 'Jadwal Stand By',
-      date: '9 Januari 2026',
-      time: '17.00 - 22.00',
-      roles: {
-        FO: [
-          { name: 'Hilmi El-Casemix', time: '17.00-19.00' },
-          { name: 'Ardan El-Imoet', time: '19.00-21.00' },
-          { name: 'Pak Rizal El-RL', time: '21.00-22.00' }
-        ],
-        MO: [
-          { name: 'Rheza El-Refactor', time: '17.00-19.00' },
-          { name: 'Vigo El-Apol', time: '19.00-21.00' },
-          { name: 'Farhan El-Labor', time: '21.00-22.00' }
-        ],
-        BO: [
-          { name: 'Rine El-Jasmed', time: '17.00-20.00' },
-          { name: 'Maul El-Inventori', time: '20.00-22.00' }
-        ]
-      }
-    },
-    {
-      title: 'Jadwal Stand By',
-      date: '9 Januari 2026',
-      time: '22.00 - 02.00',
-      roles: {
-        FO: [
-          { name: 'Dirga El-Form 🔀 Merger', time: '22.00-23.00' },
-          { name: 'Hilmi El-Casemix', time: '23.00-00.00' },
-          { name: 'Ardan El-Imoet', time: '00.00-01.00' },
-          { name: 'Pak Rizal El-RL', time: '01.00-02.00' }
-        ],
-        MO: [
-          { name: 'Vigo El-Apol', time: '22.00-23.00' },
-          { name: 'Rheza El-Refactor 🔀 Merger', time: '23.00-00.00' },
-          { name: 'Alawi El-SatuSehat 🔀 Merger', time: '00.00-01.00' },
-          { name: 'Farhan El-Labor', time: '01.00-02.00' }
-        ],
-        BO: [
-          { name: 'Miftah El-Stok 🔀 Merger', time: '22.00-23.00' },
-          { name: 'Rine El-Jasmed', time: '23.00-00.00' },
-          { name: 'Maul El-Inventori', time: '00.00-01.00' }
-        ]
-      }
-    },
-    {
-      title: 'Jadwal Stand By',
-      date: '10 Januari 2026',
-      time: '05.00 - 07.00',
-      roles: {
-        FO: 'Dirga El-Form & Ardan El-Imoet',
-        MO: 'Alawi El-SatuSehat & Rheza El-Refactor',
-        BO: '-'
-      }
+      month: 'Januari',
+      year: 2026,
+      schedules: [
+        { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
+        { date: 4, day: 'Minggu', frontOffice: 'Hilmi', middleOffice: 'Farhan', backOffice: 'Ira' },
+        { date: 10, day: 'Sabtu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Miftah' },
+        { date: 11, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Rheza', backOffice: 'Maulana' },
+        { date: 17, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Vigo', backOffice: 'Maulana', notes: 'jgn lupa input SOC ya maksimal 2 hari' },
+        { date: 18, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Vigo', backOffice: 'Miftah', notes: 'typenya overtime SOC dari jam 06.00-22.30' },
+        { date: 24, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Rheza', backOffice: 'Ira' },
+        { date: 25, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Maulana' },
+        { date: 31, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Rine' },
+      ],
+      monthNotes: [
+        'jgn lupa input SOC ya maksimal 2 hari',
+        'typenya overtime SOC dari jam 06.00-22.30'
+      ]
     }
-  ]
+  ])
 
-  const flexibleTeam: FlexibleTeamMember[] = [
-    {
-      name: 'Ira El-Revo',
-      role: 'Back Office - HRIS',
-      description: 'On-call untuk support HRIS'
-    },
-    {
-      name: 'Chabib El-Server',
-      role: 'DevOps Engineer',
-      description: 'On-call untuk infrastructure & server'
-    },
-    {
-      name: 'Neza El-PO',
-      role: 'Product Owner',
-      description: 'On-call untuk keputusan produk & prioritas'
-    }
-  ]
+  const [cadangan] = useState<Cadangan>({
+    backOffice: 'Chabib',
+    frontOffice: 'Neza'
+  })
 
-  useEffect(() => {
-    const checkTakedown = () => {
-      const now = new Date()
+  const [editingCell, setEditingCell] = useState<{ monthIdx: number; scheduleIdx: number; field: string } | null>(null)
+  const [editValue, setEditValue] = useState('')
 
-      if (now >= takedownDate) {
-        setIsVisible(false)
-        return
-      }
-
-      // Calculate time remaining
-      const diff = takedownDate.getTime() - now.getTime()
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-
-      setTimeRemaining(
-        `${days}d ${hours}h ${minutes}m ${seconds}s`
-      )
-    }
-
-    checkTakedown()
-    const interval = setInterval(checkTakedown, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  if (!isVisible) {
-    return (
-      <div className="takedown-message">
-        <h1>⏰ Jadwal Sudah Tidak Aktif</h1>
-        <p>Halaman ini sudah tidak tersedia sejak 10 Oktober 2026, 10:00 WIB</p>
-      </div>
-    )
+  const handleCellClick = (monthIdx: number, scheduleIdx: number, field: string, currentValue: string) => {
+    setEditingCell({ monthIdx, scheduleIdx, field })
+    setEditValue(currentValue)
   }
 
-  const renderRole = (role: string | Array<{ name: string; time: string }>) => {
-    if (typeof role === 'string') {
-      return <div className="person">{role}</div>
+  const handleCellBlur = () => {
+    if (editingCell) {
+      const { monthIdx, scheduleIdx, field } = editingCell
+      const newSchedules = [...monthlySchedules]
+      newSchedules[monthIdx].schedules[scheduleIdx] = {
+        ...newSchedules[monthIdx].schedules[scheduleIdx],
+        [field]: editValue
+      }
+      setMonthlySchedules(newSchedules)
     }
-    return (
-      <div className="person-list">
-        {role.map((person, idx) => (
-          <div key={idx} className="person-shift">
-            <span className="name">{person.name}</span>
-            <span className="time">({person.time})</span>
-          </div>
-        ))}
-      </div>
-    )
+    setEditingCell(null)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleCellBlur()
+    } else if (e.key === 'Escape') {
+      setEditingCell(null)
+    }
   }
 
   return (
     <div className="app">
       <header className="header">
-        <h1>📋 Go Live Rayhan</h1>
-        <div className="countdown">
-          <p>Halaman akan otomatis takedown dalam:</p>
-          <div className="timer">{timeRemaining}</div>
-        </div>
+        <h1>📋 Jadwal Stand By Tim Dev</h1>
+        <p className="subtitle">Jadwal Bulanan - Weekend Stand By</p>
       </header>
 
-      <main className="main">
-        {schedules.map((schedule, idx) => (
-          <div key={idx} className="schedule-card">
-            <div className="schedule-header">
-              <h2>{schedule.title}</h2>
-              <div className="schedule-meta">
-                <span className="date">📅 {schedule.date}</span>
-                <span className="time">🕐 {schedule.time}</span>
+      <div className="layout">
+        <main className="main">
+          {monthlySchedules.map((monthSchedule, monthIdx) => (
+            <div key={monthIdx} className="month-section">
+              <div className="month-header">
+                <h2>{monthSchedule.month} {monthSchedule.year}</h2>
+              </div>
+
+              <div className="table-container">
+                <table className="schedule-table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Hari</th>
+                      <th className="fo-header">Front Office</th>
+                      <th className="mo-header">Middle Office</th>
+                      <th className="bo-header">Back Office</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthSchedule.schedules.map((schedule, scheduleIdx) => (
+                      <tr key={scheduleIdx} className={schedule.notes ? 'has-notes' : ''}>
+                        <td className="date-cell">{schedule.date} {monthSchedule.month.slice(0, 3)}</td>
+                        <td className="day-cell">{schedule.day}</td>
+                        <td
+                          className="fo-cell editable-cell"
+                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'frontOffice', schedule.frontOffice)}
+                        >
+                          {editingCell?.monthIdx === monthIdx &&
+                           editingCell?.scheduleIdx === scheduleIdx &&
+                           editingCell?.field === 'frontOffice' ? (
+                            <input
+                              type="text"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={handleCellBlur}
+                              onKeyDown={handleKeyDown}
+                              autoFocus
+                              className="cell-input"
+                            />
+                          ) : (
+                            schedule.frontOffice
+                          )}
+                        </td>
+                        <td
+                          className="mo-cell editable-cell"
+                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'middleOffice', schedule.middleOffice)}
+                        >
+                          {editingCell?.monthIdx === monthIdx &&
+                           editingCell?.scheduleIdx === scheduleIdx &&
+                           editingCell?.field === 'middleOffice' ? (
+                            <input
+                              type="text"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={handleCellBlur}
+                              onKeyDown={handleKeyDown}
+                              autoFocus
+                              className="cell-input"
+                            />
+                          ) : (
+                            schedule.middleOffice
+                          )}
+                        </td>
+                        <td
+                          className="bo-cell editable-cell"
+                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'backOffice', schedule.backOffice)}
+                        >
+                          {editingCell?.monthIdx === monthIdx &&
+                           editingCell?.scheduleIdx === scheduleIdx &&
+                           editingCell?.field === 'backOffice' ? (
+                            <input
+                              type="text"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={handleCellBlur}
+                              onKeyDown={handleKeyDown}
+                              autoFocus
+                              className="cell-input"
+                            />
+                          ) : (
+                            schedule.backOffice
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
+          ))}
+        </main>
 
-            <div className="roles-grid">
-              <div className="role-section fo">
-                <h3>FO - Front Office</h3>
-                {renderRole(schedule.roles.FO)}
-              </div>
-
-              <div className="role-section mo">
-                <h3>MO - Middle Office</h3>
-                {renderRole(schedule.roles.MO)}
-              </div>
-
-              <div className="role-section bo">
-                <h3>BO - Back Office</h3>
-                {renderRole(schedule.roles.BO)}
-              </div>
+        <aside className="sidebar">
+          <div className="cadangan-section">
+            <h3>Cadangan</h3>
+            <div className="cadangan-item">
+              <span className="role-label">Back Office:</span>
+              <span className="person-name">{cadangan.backOffice}</span>
+            </div>
+            <div className="cadangan-item">
+              <span className="role-label">Front Office:</span>
+              <span className="person-name">{cadangan.frontOffice}</span>
             </div>
           </div>
-        ))}
 
-        <div className="schedule-card flexible-card">
-          <div className="schedule-header">
-            <h2>⚡ Tim Fleksibel / On-Call</h2>
-            <div className="schedule-meta">
-              <span className="date">📞 Dapat dihubungi kapan saja saat dibutuhkan</span>
-            </div>
-          </div>
-
-          <div className="flexible-team-grid">
-            {flexibleTeam.map((member, idx) => (
-              <div key={idx} className="flexible-member">
-                <div className="member-info">
-                  <h4 className="member-name">{member.name}</h4>
-                  <p className="member-role">{member.role}</p>
-                  <p className="member-description">{member.description}</p>
-                </div>
+          <div className="notes-section">
+            <h3>Catatan Penting</h3>
+            {monthlySchedules[0].monthNotes?.map((note, idx) => (
+              <div key={idx} className="note-item">
+                <span className="note-icon">⚠️</span>
+                <p>{note}</p>
               </div>
             ))}
           </div>
-        </div>
-      </main>
-
-      <footer className="footer">
-        <div className="footer-note">
-          <p className="overtime-note">
-            ⚠️ <strong>Catatan Penting:</strong> Jadwal stand by ini berlaku sebagai <strong>overtime</strong>.
-            Jangan lupa input jam lembur di <strong>Revo HRIS</strong>!
-          </p>
-        </div>
-        <p>Stand By Schedule System • Auto-takedown: 10 Jan 2026, 10:00 WIB</p>
-      </footer>
+        </aside>
+      </div>
     </div>
   )
 }
