@@ -193,7 +193,7 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {monthSchedule.schedules.map((schedule, scheduleIdx) => (
+                    {monthSchedule.schedules.map((schedule) => (
                       <tr key={schedule.id} className={schedule.notes ? 'has-notes' : ''}>
                         <td className="date-cell">{schedule.date} {monthSchedule.month.slice(0, 3)}</td>
                         <td className="day-cell">{schedule.day}</td>
