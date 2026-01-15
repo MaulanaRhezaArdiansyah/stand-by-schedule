@@ -1,7 +1,7 @@
 import cron from 'node-cron'
 import { sendEmail } from './emailService.js'
 import { getEmailByName } from '../config/developerEmails.js'
-import { getH1ReminderTemplate, getHReminderTemplate } from './emailTemplates.js'
+import { getH1ReminderTemplate, getHReminderTemplate, getHourlyReminderTemplate } from './emailTemplates.js'
 
 interface DaySchedule {
   date: number
@@ -138,10 +138,47 @@ export function scheduleHReminders() {
   console.log('H reminder scheduler started (runs daily at 06:00 WIB)')
 }
 
+// Hourly Reminder: Send to team leads every hour (Mon-Fri, 8 AM - 5 PM)
+export function scheduleHourlyReminders() {
+  // Run every hour from 8 AM to 5 PM, Monday to Friday
+  // Cron: minute hour day month weekday
+  // 0 8-17 * * 1-5 means: at minute 0, from 8 AM to 5 PM, Mon-Fri
+  cron.schedule('0 8-17 * * 1-5', async () => {
+    const now = new Date()
+    const hour = now.getHours()
+    console.log(`Running hourly team reminder check at ${hour}:00...`)
+
+    // Team leads: Alawi (MO), Miftah (BO), Dirga (FO)
+    const teamLeads = [
+      { name: 'Alawi', division: 'Middle Office' },
+      { name: 'Miftah', division: 'Back Office' },
+      { name: 'Dirga', division: 'Front Office' }
+    ]
+
+    const subject = `⏰ Hourly Team Check - ${hour.toString().padStart(2, '0')}.00 WIB`
+    const html = getHourlyReminderTemplate()
+
+    for (const lead of teamLeads) {
+      const email = getEmailByName(lead.name)
+      if (email) {
+        await sendEmail({ to: email, subject, html })
+        console.log(`Hourly reminder sent to ${lead.name} (${lead.division})`)
+      } else {
+        console.warn(`Email not found for team lead: ${lead.name}`)
+      }
+    }
+  }, {
+    timezone: 'Asia/Jakarta'
+  })
+
+  console.log('Hourly team reminder scheduler started (Mon-Fri, 08:00-17:00 WIB)')
+}
+
 // Start all schedulers
 export function startSchedulers() {
   scheduleH1Reminders()
   scheduleHReminders()
+  scheduleHourlyReminders()
   console.log('All schedulers started successfully')
 }
 

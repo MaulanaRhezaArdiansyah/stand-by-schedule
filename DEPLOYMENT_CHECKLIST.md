@@ -1,6 +1,6 @@
-# ✅ PM2 Deployment Checklist
+# ✅ Deployment Checklist
 
-Quick checklist sebelum deploy dengan PM2 (laptop/server).
+Quick checklist sebelum jalanin scheduler di laptop.
 
 ---
 
@@ -11,7 +11,6 @@ Quick checklist sebelum deploy dengan PM2 (laptop/server).
 - [x] Email scheduler - done
 - [x] Email templates - done
 - [x] Developer emails via env vars - done
-- [x] PM2 config file - done (ecosystem.config.js)
 
 ### 2. Environment Variables Ready
 Pastikan `.env` file lu udah lengkap:
@@ -46,158 +45,100 @@ EMAIL_NEZA=<email>
 
 ---
 
-## 🚀 Deployment Steps
+## 🚀 Start Scheduler
 
-### Step 1: Install PM2
-
-```bash
-npm install -g pm2
-```
-
-Verify:
-```bash
-pm2 --version
-```
-
-### Step 2: Verify .env File
-
-Pastikan `.env` file udah lengkap dengan semua variables dari checklist di atas.
-
-### Step 3: Start with PM2
+### Simple Method (Recommended)
 
 ```bash
-# Start scheduler
-pm2 start ecosystem.config.js
-
-# Check status
-pm2 status
+# Open terminal
+cd C:\typescript\stand-by-schedule
+bun run scheduler
 ```
 
-### Step 4: Save PM2 Config
-
-```bash
-# Save process list
-pm2 save
-
-# Setup auto-start on boot
-pm2 startup
-```
-
-Run command yang dikasih PM2, lalu:
-```bash
-pm2 save
-```
-
-### Step 5: Verify
-
-Check PM2 logs:
-
+**Expected output:**
 ```
 🚀 Starting Stand By Email Scheduler...
-🏥 Health check server running on port 10000
 ✅ Email configuration verified
 ✅ Loaded 1 month(s) of schedules
 ✅ Email scheduler is running!
 ```
 
+**Minimize terminal (jangan close!)**
+
 ---
 
-## 🧪 Testing After Deploy
+## 🧪 Testing
 
-### Test 1: Check PM2 Status
-```bash
-pm2 status
-```
-Status harus `online` (hijau)
+### Test 1: Verify Scheduler Running
 
-### Test 2: Check Logs
-```bash
-pm2 logs standby-scheduler --lines 50
-```
-Verify:
+Terminal output shows:
 - ✅ Email configuration verified
 - ✅ Loaded schedules
 - ✅ Email scheduler is running
 
-### Test 3: Manual Test Email
+### Test 2: Manual Test Email
+
+Open terminal baru:
 ```bash
+cd C:\typescript\stand-by-schedule
 bun run test:email
 ```
-Check inbox untuk test email
+Check inbox untuk test email.
 
-### Test 4: Wait for Schedule
-- Wait until 17:00 WIB or 06:00 WIB
-- Check developer inbox
-- Verify email received
+### Test 3: Wait for Schedule
+- 17:00 WIB: H-1 reminder sent
+- 06:00 WIB: H reminder sent
 
 ---
 
 ## 📊 Monitoring
 
-### Check Status
-```bash
-pm2 status
-```
-Status harus `online` dengan uptime yang naik
+### Check Scheduler Status
 
-### Real-time Monitoring
-```bash
-pm2 monit
-```
-Shows CPU, memory usage, logs
+1. Look at terminal window
+2. Should see "Email scheduler is running!"
+3. No error messages
 
 ### Update Schedule
-Kalo mau update schedule:
-1. Edit `src/server/index.ts` locally
-2. Reload PM2:
-   ```bash
-   pm2 reload standby-scheduler
-   ```
+
+1. Edit `src/server/index.ts`
+2. Update `monthlySchedules` array
+3. Stop scheduler (Ctrl+C)
+4. Start again: `bun run scheduler`
+
+### Update Developer Emails
+
+1. Edit `.env` file
+2. Stop scheduler (Ctrl+C)
+3. Start again: `bun run scheduler`
 
 ---
 
 ## 🔧 Troubleshooting
 
 ### Email ga terkirim?
-```bash
-pm2 logs standby-scheduler --lines 100 | grep -i error
-```
-1. Verify `.env` file complete
-2. Check EMAIL_PASSWORD (app-specific password)
-3. Test manual: `bun run test:email`
+1. Check terminal for errors
+2. Verify `.env` file complete
+3. Check EMAIL_PASSWORD (app-specific password)
+4. Test manual: `bun run test:email`
 
-### Scheduler ga jalan?
-```bash
-pm2 status
-```
-If status `errored`:
-```bash
-pm2 logs standby-scheduler --err
-pm2 restart standby-scheduler
-```
+### Scheduler stopped?
+- Terminal closed → Re-open and run `bun run scheduler`
+- Laptop sleep → Disable sleep in Power settings
+- Internet down → Check connection
 
-### PM2 ga auto-start?
-```bash
-pm2 unstartup
-pm2 startup
-# Run command yang dikasih
-pm2 save
+### Port 10000 conflict?
+Edit `src/server/index.ts`:
+```typescript
+const PORT = process.env.PORT || 10001
 ```
-
-### Update developer emails?
-1. Edit `.env` file
-2. Reload PM2:
-   ```bash
-   pm2 reload standby-scheduler
-   ```
 
 ---
 
 ## ✅ Post-Deployment
 
-- [ ] PM2 status `online`
-- [ ] Verify email config valid (check logs)
-- [ ] PM2 auto-start configured (`pm2 startup` & `pm2 save`)
+- [ ] Scheduler running (check terminal)
+- [ ] Verify email config valid (no errors in terminal)
 - [ ] Update all developer emails di `.env`
 - [ ] Test email delivery (manual test or wait for schedule)
 - [ ] Keep laptop awake settings configured
@@ -209,28 +150,41 @@ pm2 save
 **FREE** - $0/month
 
 Requirements:
-- Laptop/PC harus nyala 24/7
-- Stable internet connection
-- Electricity cost (kalo peduli 😅)
+- Laptop nyala 24/7
+- Stable internet
+- ~50MB RAM (very light!)
 
 ---
 
-## 💡 PM2 Quick Commands
+## 💡 Quick Commands
 
 ```bash
-pm2 status                     # Check status
-pm2 logs standby-scheduler     # View logs
-pm2 monit                      # Real-time monitoring
-pm2 restart standby-scheduler  # Restart
-pm2 reload standby-scheduler   # Reload (zero-downtime)
-pm2 stop standby-scheduler     # Stop
-pm2 save                       # Save config
+# Start scheduler
+bun run scheduler
+
+# Stop scheduler
+Ctrl+C (in scheduler terminal)
+
+# Test email
+bun run test:email
+
+# Check dev mode (with auto-reload)
+bun run scheduler:dev
 ```
 
 ---
 
-**Deployment Guide**: [DEPLOY_PM2.md](./DEPLOY_PM2.md)
+## 🎯 Keep Laptop Awake
+
+**Windows Settings:**
+1. Settings → Power & Sleep
+2. Screen: 15 minutes
+3. Sleep: **Never**
+
+---
+
+**Full Guide**: [START.md](./START.md)
 
 Good luck! 🚀
 
-Scheduler jalan 24/7 di laptop lu (selama laptop nyala)!
+Scheduler jalan ringan, tinggal minimize terminal!

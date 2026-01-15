@@ -50,24 +50,27 @@ bun run scheduler:stop
 
 ## 📦 Deployment
 
-### Option 1: Railway (Recommended - FREE)
+### Simple Method: Keep Terminal Open (Recommended)
 
-See [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) for complete guide.
-
-**Quick steps:**
-1. Push code to GitHub
-2. Connect to Railway
-3. Set environment variables
-4. Deploy!
-
-### Option 2: Local with PM2
+**Paling simple & ringan!**
 
 ```bash
-bun install -g pm2
-pm2 start "bun run scheduler" --name "standby-scheduler"
-pm2 save
-pm2 startup
+cd C:\typescript\stand-by-schedule
+bun run scheduler
 ```
+
+- Minimize terminal (jangan close!)
+- Keep laptop awake & connected to internet
+- ~50MB RAM usage only
+
+See [START.md](./START.md) for complete guide.
+
+---
+
+**Optional:** Auto-start on boot
+1. Press Win+R
+2. Type: `shell:startup`
+3. Copy `start-scheduler.bat` to Startup folder
 
 ---
 

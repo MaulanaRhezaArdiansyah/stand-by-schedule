@@ -12,7 +12,8 @@
     "scheduler:dev": "bun --watch src/server/index.ts",
     "scheduler:check": "powershell -ExecutionPolicy Bypass -File scripts/check-scheduler.ps1",
     "scheduler:stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-scheduler.ps1",
-    "test:email": "bun src/test-email.ts"
+    "test:email": "bun src/test-email.ts",
+    "test:hourly": "bun src/test-hourly-email.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
