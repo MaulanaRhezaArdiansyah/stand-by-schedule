@@ -180,58 +180,56 @@ function App() {
         </main>
 
         <aside className="sidebar">
-          <div className="sidebar-content">
-            <div className="cadangan-section">
-              <h3>Cadangan</h3>
-              <div className="cadangan-item">
-                <span className="role-label">Back Office:</span>
-                <span className="person-name">{cadangan.backOffice}</span>
-              </div>
-              <div className="cadangan-item">
-                <span className="role-label">Front Office:</span>
-                <span className="person-name">{cadangan.frontOffice}</span>
-              </div>
+          <div className="cadangan-section">
+            <h3>Cadangan</h3>
+            <div className="cadangan-item">
+              <span className="role-label">Back Office:</span>
+              <span className="person-name">{cadangan.backOffice}</span>
             </div>
-
-            <div className="notes-section">
-              <h3>Catatan Penting</h3>
-              {monthlySchedules[0].monthNotes?.map((note, idx) => (
-                <div key={idx} className="note-item">
-                  <span className="note-icon">⚠️</span>
-                  <p>{note}</p>
-                </div>
-              ))}
+            <div className="cadangan-item">
+              <span className="role-label">Front Office:</span>
+              <span className="person-name">{cadangan.frontOffice}</span>
             </div>
+          </div>
 
-            <div className="reminder-info-section">
-              <h3>📬 Sistem Reminder</h3>
-              <div className="reminder-schedule">
-                <div className="reminder-item">
-                  <div className="reminder-time">
-                    <span className="time-badge h-minus-1">17:00 WIB</span>
-                    <span className="day-label">H-1</span>
-                  </div>
-                  <p className="reminder-desc">
-                    Reminder dikirim ke developer yang stand by <strong>besok</strong> via:
-                  </p>
-                  <div className="channel-badges">
-                    <span className="channel-badge email">📧 Email</span>
-                    <span className="channel-badge whatsapp">💬 WhatsApp</span>
-                  </div>
+          <div className="notes-section">
+            <h3>Catatan Penting</h3>
+            {monthlySchedules[0].monthNotes?.map((note, idx) => (
+              <div key={idx} className="note-item">
+                <span className="note-icon">⚠️</span>
+                <p>{note}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="reminder-info-section">
+            <h3>📬 Sistem Reminder</h3>
+            <div className="reminder-schedule">
+              <div className="reminder-item">
+                <div className="reminder-time">
+                  <span className="time-badge h-minus-1">17:00 WIB</span>
+                  <span className="day-label">H-1</span>
                 </div>
+                <p className="reminder-desc">
+                  Reminder dikirim ke developer yang stand by <strong>besok</strong> via:
+                </p>
+                <div className="channel-badges">
+                  <span className="channel-badge email">📧 Email</span>
+                  <span className="channel-badge whatsapp">💬 WhatsApp</span>
+                </div>
+              </div>
 
-                <div className="reminder-item">
-                  <div className="reminder-time">
-                    <span className="time-badge h-day">06:00 WIB</span>
-                    <span className="day-label">Hari H</span>
-                  </div>
-                  <p className="reminder-desc">
-                    Reminder dikirim ke developer yang stand by <strong>hari ini</strong> via:
-                  </p>
-                  <div className="channel-badges">
-                    <span className="channel-badge email">📧 Email</span>
-                    <span className="channel-badge whatsapp">💬 WhatsApp</span>
-                  </div>
+              <div className="reminder-item">
+                <div className="reminder-time">
+                  <span className="time-badge h-day">06:00 WIB</span>
+                  <span className="day-label">Hari H</span>
+                </div>
+                <p className="reminder-desc">
+                  Reminder dikirim ke developer yang stand by <strong>hari ini</strong> via:
+                </p>
+                <div className="channel-badges">
+                  <span className="channel-badge email">📧 Email</span>
+                  <span className="channel-badge whatsapp">💬 WhatsApp</span>
                 </div>
               </div>
             </div>
