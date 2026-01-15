@@ -1,4 +1,6 @@
-# GitHub Gist Setup Instructions
+# GitHub Gist Setup Instructions (Deprecated)
+
+> This project now uses Supabase for schedule storage. Follow [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) instead.
 
 ## Step 1: Buat GitHub Gist
 

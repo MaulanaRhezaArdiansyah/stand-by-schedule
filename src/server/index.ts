@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 import { startSchedulers, setSchedulesData } from '../services/scheduler.js'
 import { verifyEmailConfig } from '../services/emailService.js'
 import { createServer } from 'http'
-import { fetchGistData } from './gistService.js'
+import { fetchSupabaseData } from './supabaseService.js'
 import { handleRequest } from './router.js'
 
 // Load environment variables
@@ -44,9 +44,9 @@ async function main() {
 
   console.log('✅ Email configuration verified')
 
-  // Load schedules data from Gist
-  console.log('\n📅 Loading schedules data from GitHub Gist...')
-  const gistData = await fetchGistData()
+  // Load schedules data from Supabase
+  console.log('\n📅 Loading schedules data from Supabase...')
+  const gistData = await fetchSupabaseData()
 
   // Group schedules by month
   const monthlySchedules = gistData.schedules.reduce((acc, schedule) => {

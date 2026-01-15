@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { fetchGistData, invalidateCache, type Schedule } from './services/gistService'
+import { fetchSupabaseData, invalidateCache, type Schedule } from './services/supabaseService'
 import { apiService } from './services/apiService'
 import { LoginModal } from './components/LoginModal'
 import { AddScheduleModal } from './components/AddScheduleModal'
@@ -38,7 +38,7 @@ function App() {
     try {
       setLoading(true)
       setError(null)
-      const data = await fetchGistData()
+      const data = await fetchSupabaseData()
 
       // Group schedules by month
       const grouped = data.schedules.reduce((acc, schedule) => {
