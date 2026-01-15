@@ -3,22 +3,18 @@ import { startSchedulers, setSchedulesData } from '../services/scheduler.js'
 import { verifyEmailConfig } from '../services/emailService.js'
 import { createServer } from 'http'
 import { fetchGistData } from './gistService.js'
+import { handleRequest } from './router.js'
 
 // Load environment variables
 dotenv.config()
 
-// Create a simple HTTP server for health checks
+// Create a simple HTTP server with API support
 const PORT = process.env.PORT || 10000
 
-const server = createServer((req, res) => {
-  if (req.url === '/health' || req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({
-      status: 'ok',
-      service: 'standby-scheduler',
-      timestamp: new Date().toISOString()
-    }))
-  } else {
+const server = createServer(async (req, res) => {
+  const handled = await handleRequest(req, res)
+
+  if (!handled) {
     res.writeHead(404, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'Not found' }))
   }
@@ -28,9 +24,12 @@ async function main() {
   console.log('🚀 Starting Stand By Email Scheduler...')
   console.log('='.repeat(50))
 
-  // Start HTTP server for health checks
+  // Start HTTP server with API
   server.listen(PORT, () => {
-    console.log(`\n🏥 Health check server running on port ${PORT}`)
+    console.log(`\n🌐 API server running on port ${PORT}`)
+    console.log(`   - Health: http://localhost:${PORT}/health`)
+    console.log(`   - Login:  http://localhost:${PORT}/api/auth/login`)
+    console.log(`   - Data:   http://localhost:${PORT}/api/data`)
   })
 
   // Verify email configuration

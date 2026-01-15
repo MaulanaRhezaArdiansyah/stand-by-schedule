@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { fetchGistData } from './services/gistService'
+import { fetchGistData, invalidateCache, type Schedule } from './services/gistService'
+import { apiService } from './services/apiService'
+import { LoginModal } from './components/LoginModal'
+import { AddScheduleModal } from './components/AddScheduleModal'
+import { EditScheduleModal } from './components/EditScheduleModal'
 
-interface DaySchedule {
-  date: number
-  day: string
-  frontOffice: string
-  middleOffice: string
-  backOffice: string
-  notes?: string
-}
+interface DaySchedule extends Schedule {}
 
 interface MonthSchedule {
   month: string
@@ -29,75 +26,98 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await fetchGistData()
+  // Auth state
+  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingSchedule, setEditingSchedule] = useState<DaySchedule | null>(null)
 
-        // Group schedules by month
-        const grouped = data.schedules.reduce((acc, schedule) => {
-          const key = `${schedule.month}-${schedule.year}`
-          if (!acc[key]) {
-            acc[key] = {
-              month: schedule.month,
-              year: schedule.year,
-              schedules: [],
-              monthNotes: data.monthNotes
-            }
+  // Load data
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await fetchGistData()
+
+      // Group schedules by month
+      const grouped = data.schedules.reduce((acc, schedule) => {
+        const key = `${schedule.month}-${schedule.year}`
+        if (!acc[key]) {
+          acc[key] = {
+            month: schedule.month,
+            year: schedule.year,
+            schedules: [],
+            monthNotes: data.monthNotes
           }
-          acc[key].schedules.push({
-            date: schedule.date,
-            day: schedule.day,
-            frontOffice: schedule.frontOffice,
-            middleOffice: schedule.middleOffice,
-            backOffice: schedule.backOffice,
-            notes: schedule.notes
-          })
-          return acc
-        }, {} as Record<string, MonthSchedule>)
+        }
+        acc[key].schedules.push(schedule)
+        return acc
+      }, {} as Record<string, MonthSchedule>)
 
-        setMonthlySchedules(Object.values(grouped))
-        setCadangan(data.backup)
-      } catch (err) {
-        console.error('Failed to load data:', err)
-        setError('Gagal memuat data. Silakan refresh halaman.')
-      } finally {
-        setLoading(false)
-      }
+      // Sort months by year and month order
+      const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+      const sortedMonths = Object.values(grouped).sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year
+        return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
+      })
+
+      setMonthlySchedules(sortedMonths)
+      setCadangan(data.backup)
+    } catch (err) {
+      console.error('Failed to load data:', err)
+      setError('Gagal memuat data. Silakan refresh halaman.')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     loadData()
+
+    // Check if already logged in
+    apiService.verifyToken().then(result => {
+      if (result) {
+        setUser(result.user)
+      }
+    })
   }, [])
 
-  const [editingCell, setEditingCell] = useState<{ monthIdx: number; scheduleIdx: number; field: string } | null>(null)
-  const [editValue, setEditValue] = useState('')
-
-  const handleCellClick = (monthIdx: number, scheduleIdx: number, field: string, currentValue: string) => {
-    setEditingCell({ monthIdx, scheduleIdx, field })
-    setEditValue(currentValue)
+  const handleLogin = (userData: { username: string; role: string }) => {
+    setUser(userData)
   }
 
-  const handleCellBlur = () => {
-    if (editingCell) {
-      const { monthIdx, scheduleIdx, field } = editingCell
-      const newSchedules = [...monthlySchedules]
-      newSchedules[monthIdx].schedules[scheduleIdx] = {
-        ...newSchedules[monthIdx].schedules[scheduleIdx],
-        [field]: editValue
-      }
-      setMonthlySchedules(newSchedules)
-    }
-    setEditingCell(null)
+  const handleLogout = () => {
+    apiService.logout()
+    setUser(null)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleCellBlur()
-    } else if (e.key === 'Escape') {
-      setEditingCell(null)
+  const handleDelete = async (scheduleId: string) => {
+    if (!confirm('Yakin mau hapus schedule ini?')) return
+
+    try {
+      await apiService.deleteSchedule(scheduleId)
+      invalidateCache()
+      await loadData()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete')
     }
+  }
+
+  const handleAddSuccess = async () => {
+    invalidateCache()
+    await loadData()
+  }
+
+  const handleEdit = (schedule: DaySchedule) => {
+    setEditingSchedule(schedule)
+    setShowEditModal(true)
+  }
+
+  const handleEditSuccess = async () => {
+    invalidateCache()
+    await loadData()
+    setEditingSchedule(null)
   }
 
   if (loading) {
@@ -125,8 +145,31 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>📋 Jadwal Stand By Tim Dev</h1>
-        <p className="subtitle">Jadwal Bulanan - Weekend Stand By</p>
+        <div className="header-content">
+          <div>
+            <h1>📋 Jadwal Stand By Tim Dev</h1>
+            <p className="subtitle">Jadwal Bulanan - Weekend Stand By</p>
+          </div>
+          <div className="header-actions">
+            {user ? (
+              <>
+                <span className="user-badge">👤 {user.username}</span>
+                {user.role === 'admin' && (
+                  <button className="add-btn" onClick={() => setShowAddModal(true)}>
+                    ➕ Tambah Schedule
+                  </button>
+                )}
+                <button className="logout-btn" onClick={handleLogout}>
+                  🚪 Logout
+                </button>
+              </>
+            ) : (
+              <button className="login-btn" onClick={() => setShowLoginModal(true)}>
+                🔐 Login Admin
+              </button>
+            )}
+          </div>
+        </div>
       </header>
 
       <div className="layout">
@@ -146,73 +189,35 @@ function App() {
                       <th className="fo-header">Front Office</th>
                       <th className="mo-header">Middle Office</th>
                       <th className="bo-header">Back Office</th>
+                      {user?.role === 'admin' && <th>Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {monthSchedule.schedules.map((schedule, scheduleIdx) => (
-                      <tr key={scheduleIdx} className={schedule.notes ? 'has-notes' : ''}>
+                      <tr key={schedule.id} className={schedule.notes ? 'has-notes' : ''}>
                         <td className="date-cell">{schedule.date} {monthSchedule.month.slice(0, 3)}</td>
                         <td className="day-cell">{schedule.day}</td>
-                        <td
-                          className="fo-cell editable-cell"
-                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'frontOffice', schedule.frontOffice)}
-                        >
-                          {editingCell?.monthIdx === monthIdx &&
-                           editingCell?.scheduleIdx === scheduleIdx &&
-                           editingCell?.field === 'frontOffice' ? (
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={handleCellBlur}
-                              onKeyDown={handleKeyDown}
-                              autoFocus
-                              className="cell-input"
-                            />
-                          ) : (
-                            schedule.frontOffice
-                          )}
-                        </td>
-                        <td
-                          className="mo-cell editable-cell"
-                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'middleOffice', schedule.middleOffice)}
-                        >
-                          {editingCell?.monthIdx === monthIdx &&
-                           editingCell?.scheduleIdx === scheduleIdx &&
-                           editingCell?.field === 'middleOffice' ? (
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={handleCellBlur}
-                              onKeyDown={handleKeyDown}
-                              autoFocus
-                              className="cell-input"
-                            />
-                          ) : (
-                            schedule.middleOffice
-                          )}
-                        </td>
-                        <td
-                          className="bo-cell editable-cell"
-                          onClick={() => handleCellClick(monthIdx, scheduleIdx, 'backOffice', schedule.backOffice)}
-                        >
-                          {editingCell?.monthIdx === monthIdx &&
-                           editingCell?.scheduleIdx === scheduleIdx &&
-                           editingCell?.field === 'backOffice' ? (
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={handleCellBlur}
-                              onKeyDown={handleKeyDown}
-                              autoFocus
-                              className="cell-input"
-                            />
-                          ) : (
-                            schedule.backOffice
-                          )}
-                        </td>
+                        <td className="fo-cell">{schedule.frontOffice}</td>
+                        <td className="mo-cell">{schedule.middleOffice}</td>
+                        <td className="bo-cell">{schedule.backOffice}</td>
+                        {user?.role === 'admin' && (
+                          <td className="action-cell">
+                            <button
+                              className="edit-btn-small"
+                              onClick={() => handleEdit(schedule)}
+                              title="Edit schedule"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="delete-btn-small"
+                              onClick={() => handleDelete(schedule.id)}
+                              title="Hapus schedule"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -237,7 +242,7 @@ function App() {
 
           <div className="notes-section">
             <h3>Catatan Penting</h3>
-            {monthlySchedules[0].monthNotes?.map((note, idx) => (
+            {monthlySchedules[0]?.monthNotes?.map((note, idx) => (
               <div key={idx} className="note-item">
                 <span className="note-icon">⚠️</span>
                 <p>{note}</p>
@@ -279,6 +284,31 @@ function App() {
           </div>
         </aside>
       </div>
+
+      {showLoginModal && (
+        <LoginModal
+          onLogin={handleLogin}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {showAddModal && (
+        <AddScheduleModal
+          onSuccess={handleAddSuccess}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {showEditModal && editingSchedule && (
+        <EditScheduleModal
+          schedule={editingSchedule}
+          onSuccess={handleEditSuccess}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingSchedule(null)
+          }}
+        />
+      )}
     </div>
   )
 }

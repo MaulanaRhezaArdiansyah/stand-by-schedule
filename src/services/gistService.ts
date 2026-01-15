@@ -45,7 +45,9 @@ export async function fetchGistData(): Promise<GistData> {
   }
 
   try {
-    const response = await fetch(GIST_URL);
+    // Add cache-busting timestamp to prevent GitHub CDN caching
+    const cacheBuster = `?t=${now}`;
+    const response = await fetch(GIST_URL + cacheBuster);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch gist data: ${response.statusText}`);
