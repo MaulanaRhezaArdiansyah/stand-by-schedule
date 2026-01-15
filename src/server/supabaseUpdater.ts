@@ -15,7 +15,7 @@ export async function updateSupabaseData(data: ScheduleData): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/standby-schedule?id=eq.${SUPABASE_DATA_ID}`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/schedules?id=eq.${SUPABASE_DATA_ID}`, {
       method: 'PATCH',
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,

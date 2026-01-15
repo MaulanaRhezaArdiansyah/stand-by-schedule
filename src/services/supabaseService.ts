@@ -45,7 +45,7 @@ function ensureSupabaseConfig() {
 }
 
 function buildSupabaseUrl() {
-  return `${SUPABASE_URL}/rest/v1/standby-schedule?select=data&id=eq.${SUPABASE_DATA_ID}&limit=1`;
+  return `${SUPABASE_URL}/rest/v1/schedules?select=data&id=eq.${SUPABASE_DATA_ID}&limit=1`;
 }
 
 export async function fetchSupabaseData(): Promise<ScheduleData> {
@@ -74,7 +74,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
     const data = payload[0]?.data;
 
     if (!data) {
-      throw new Error('Supabase data is empty. Ensure standby-schedule has a row with matching id.');
+      throw new Error('Supabase data is empty. Ensure schedules has a row with matching id.');
     }
 
     // Update cache
