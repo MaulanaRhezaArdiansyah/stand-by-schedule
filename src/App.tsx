@@ -39,8 +39,8 @@ function App() {
         { date: 31, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Rine' },
       ],
       monthNotes: [
-        'jgn lupa input SOC ya maksimal 2 hari',
-        'typenya overtime SOC dari jam 06.00-22.30'
+        'Jangan lupa input SOC ya maksimal 2 hari',
+        'Type-nya overtime SOC dari jam 06.00-22.30'
       ]
     }
   ])
