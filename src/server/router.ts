@@ -1,8 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { authenticateUser, generateToken, authMiddleware, requireAdmin, type AuthRequest } from './auth.js';
-import { fetchGistData, invalidateCache } from './gistService.js';
-import { updateGist } from './gistUpdater.js';
-import type { Schedule } from './gistService.js';
+import { fetchSupabaseData, invalidateCache } from './supabaseService.js';
+import { updateSupabaseData } from './supabaseUpdater.js';
+import type { Schedule } from './supabaseService.js';
 import { setSchedulesData } from '../services/scheduler.js';
 
 // Helper to parse request body
@@ -103,7 +103,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
   // Get all data (public)
   if (url === '/api/data' && method === 'GET') {
     try {
-      const data = await fetchGistData();
+      const data = await fetchSupabaseData();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
       return true;
@@ -134,14 +134,14 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       newSchedule.id = `${Date.now()}`;
 
       // Fetch current data
-      const data = await fetchGistData();
+      const data = await fetchSupabaseData();
       data.schedules.push(newSchedule);
 
-      // Update Gist
-      const success = await updateGist(data);
+      // Update Supabase
+      const success = await updateSupabaseData(data);
       if (!success) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Gist' }));
+        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
         return true;
       }
 
@@ -170,7 +170,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       const updatedSchedule: Partial<Schedule> = body;
 
       // Fetch current data
-      const data = await fetchGistData();
+      const data = await fetchSupabaseData();
       const index = data.schedules.findIndex(s => s.id === scheduleId);
 
       if (index === -1) {
@@ -182,11 +182,11 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       // Update schedule
       data.schedules[index] = { ...data.schedules[index], ...updatedSchedule };
 
-      // Update Gist
-      const success = await updateGist(data);
+      // Update Supabase
+      const success = await updateSupabaseData(data);
       if (!success) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Gist' }));
+        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
         return true;
       }
 
@@ -213,7 +213,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       const scheduleId = url.split('/')[3];
 
       // Fetch current data
-      const data = await fetchGistData();
+      const data = await fetchSupabaseData();
       const index = data.schedules.findIndex(s => s.id === scheduleId);
 
       if (index === -1) {
@@ -225,11 +225,11 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       // Remove schedule
       data.schedules.splice(index, 1);
 
-      // Update Gist
-      const success = await updateGist(data);
+      // Update Supabase
+      const success = await updateSupabaseData(data);
       if (!success) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Gist' }));
+        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
         return true;
       }
 
@@ -251,7 +251,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 }
 
 async function refreshSchedulerData() {
-  const gistData = await fetchGistData();
+  const gistData = await fetchSupabaseData();
 
   // Group schedules by month
   const monthlySchedules = gistData.schedules.reduce((acc, schedule) => {

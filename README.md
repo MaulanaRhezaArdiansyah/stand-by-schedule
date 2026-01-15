@@ -103,22 +103,11 @@ EMAIL_ARDAN=ardan@company.com
 
 Emails are loaded from environment variables via `src/config/developerEmails.ts`
 
-### Schedule Data
+### Schedule Data (Supabase)
 
-Edit `src/server/index.ts` to update monthly schedules:
+Schedule data is stored in Supabase. Configure the Supabase environment variables in `.env` and set up the `standby_data` table.
 
-```typescript
-const monthlySchedules = [
-  {
-    month: 'Januari',
-    year: 2026,
-    schedules: [
-      { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
-      // ... add more dates
-    ]
-  }
-]
-```
+See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for step-by-step instructions.
 
 ---
 

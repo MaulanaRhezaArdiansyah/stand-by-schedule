@@ -1,4 +1,6 @@
-# GitHub Personal Access Token Setup
+# GitHub Personal Access Token Setup (Deprecated)
+
+> GitHub Gist integration has been replaced by Supabase. You can ignore this unless you still use Gist.
 
 Untuk bisa edit/add/delete schedules, kamu perlu GitHub Personal Access Token.
 

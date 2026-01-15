@@ -112,20 +112,11 @@ EMAIL_CHABIB=chabib@example.com
 EMAIL_NEZA=neza@example.com
 ```
 
-### Schedule Data (src/server/index.ts)
+### Schedule Data (Supabase)
 
-```typescript
-const monthlySchedules = [
-  {
-    month: 'Januari',
-    year: 2026,
-    schedules: [
-      { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
-      // ... add more dates
-    ]
-  }
-]
-```
+Schedule data is stored in Supabase. Configure the Supabase environment variables in `.env` and seed the `standby_data` table.
+
+See: [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
 
 ---
 
