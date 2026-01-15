@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { authenticateUser, generateToken, authMiddleware, requireAdmin, type AuthRequest } from './auth.js';
 import { fetchGistData, invalidateCache } from './gistService.js';
 import { updateGist } from './gistUpdater.js';
-import type { GistData, Schedule } from './gistService.js';
+import type { Schedule } from './gistService.js';
 import { setSchedulesData } from '../services/scheduler.js';
 
 // Helper to parse request body
