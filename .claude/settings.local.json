@@ -3,7 +3,18 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(powershell -Command \"Start-Process ''install-task-scheduler.bat'' -Verb RunAs\")",
+      "Bash(cmd //c schtasks //query //tn \"StandByScheduler\" //fo list //v)",
+      "Bash(findstr:*)",
+      "Bash(cmd //c schtasks //query //tn \"StandByScheduler\" //fo list)",
+      "Bash(curl:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(cmd //c schtasks //end //tn \"StandByScheduler\")",
+      "Bash(cmd //c schtasks //run //tn \"StandByScheduler\")",
+      "Bash(pm2 start:*)"
     ]
   }
 }

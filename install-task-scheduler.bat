@@ -69,15 +69,27 @@ REM Create scheduled task
 echo [INFO] Creating Windows Scheduled Task...
 echo.
 
+REM Get current username
+set CURRENT_USER=%USERNAME%
+
+REM Create task with onlogon trigger for PM2
 schtasks /create ^
   /tn "StandByScheduler" ^
-  /tr "\"%BUN_PATH%\" run src/server/index.ts" ^
-  /sc onstart ^
-  /ru "SYSTEM" ^
+  /tr "\"%PROJECT_DIR%\start-pm2-scheduler.bat\"" ^
+  /sc onlogon ^
   /rl highest ^
-  /f ^
-  /sd "%date%" ^
-  /st 00:00
+  /f
+
+REM Add delay to ensure system is ready
+timeout /t 2 /nobreak >nul
+
+REM Add onlogon trigger as backup using XML
+schtasks /query /tn "StandByScheduler" /xml > "%TEMP%\StandByScheduler.xml"
+powershell -Command "$xml = [xml](Get-Content '%TEMP%\StandByScheduler.xml'); $trigger = $xml.CreateElement('LogonTrigger', $xml.Task.Triggers.NamespaceURI); $trigger.InnerXml = '<Enabled>true</Enabled>'; $xml.Task.Triggers.AppendChild($trigger); $xml.Task.Settings.ExecutionTimeLimit = 'PT0S'; $xml.Task.Settings.DisallowStartIfOnBatteries = 'false'; $xml.Task.Settings.StopIfGoingOnBatteries = 'false'; $xml.Task.Settings.MultipleInstancesPolicy = 'IgnoreNew'; $xml.Save('%TEMP%\StandByScheduler_updated.xml')"
+schtasks /delete /tn "StandByScheduler" /f >nul
+schtasks /create /tn "StandByScheduler" /xml "%TEMP%\StandByScheduler_updated.xml" /ru "%USERNAME%" /f
+del "%TEMP%\StandByScheduler.xml" >nul 2>&1
+del "%TEMP%\StandByScheduler_updated.xml" >nul 2>&1
 
 if %errorLevel% NEQ 0 (
     echo.
@@ -86,33 +98,7 @@ if %errorLevel% NEQ 0 (
     exit /b 1
 )
 
-REM Set working directory via XML update
-echo [INFO] Configuring task settings...
-
-REM Export task to XML
-schtasks /query /tn "StandByScheduler" /xml > "%TEMP%\StandByScheduler.xml"
-
-REM Create PowerShell script to update XML
-echo $xml = [xml](Get-Content "%TEMP%\StandByScheduler.xml") > "%TEMP%\update-task.ps1"
-echo $xml.Task.Actions.Exec.WorkingDirectory = "%PROJECT_DIR%" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.MultipleInstancesPolicy = "IgnoreNew" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.DisallowStartIfOnBatteries = "false" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.StopIfGoingOnBatteries = "false" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.ExecutionTimeLimit = "PT0S" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.RestartOnFailure.Interval = "PT1M" >> "%TEMP%\update-task.ps1"
-echo $xml.Task.Settings.RestartOnFailure.Count = "3" >> "%TEMP%\update-task.ps1"
-echo $xml.Save("%TEMP%\StandByScheduler_updated.xml") >> "%TEMP%\update-task.ps1"
-
-powershell -ExecutionPolicy Bypass -File "%TEMP%\update-task.ps1"
-
-REM Re-import updated task
-schtasks /delete /tn "StandByScheduler" /f >nul
-schtasks /create /tn "StandByScheduler" /xml "%TEMP%\StandByScheduler_updated.xml" /f
-
-REM Clean up temp files
-del "%TEMP%\StandByScheduler.xml" >nul 2>&1
-del "%TEMP%\StandByScheduler_updated.xml" >nul 2>&1
-del "%TEMP%\update-task.ps1" >nul 2>&1
+echo [INFO] Task configured to run on user logon
 
 echo.
 echo [OK] Task created successfully!
@@ -133,8 +119,8 @@ echo Installation Complete!
 echo ========================================
 echo.
 echo Task Name: StandByScheduler
-echo Trigger: On system startup
-echo User: SYSTEM
+echo Trigger: On user logon
+echo User: %USERNAME%
 echo.
 echo Useful commands:
 echo   - Check status:  schtasks /query /tn "StandByScheduler"
