@@ -2,32 +2,10 @@ import dotenv from 'dotenv'
 import { startSchedulers, setSchedulesData } from '../services/scheduler.js'
 import { verifyEmailConfig } from '../services/emailService.js'
 import { createServer } from 'http'
+import { fetchGistData } from './gistService.js'
 
 // Load environment variables
 dotenv.config()
-
-// Import schedules data (same structure as in App.tsx)
-const monthlySchedules = [
-  {
-    month: 'Januari',
-    year: 2026,
-    schedules: [
-      { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
-      { date: 4, day: 'Minggu', frontOffice: 'Hilmi', middleOffice: 'Farhan', backOffice: 'Ira' },
-      { date: 10, day: 'Sabtu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Miftah' },
-      { date: 11, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Rheza', backOffice: 'Maulana' },
-      { date: 17, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Vigo', backOffice: 'Maulana', notes: 'jgn lupa input SOC ya maksimal 2 hari' },
-      { date: 18, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Vigo', backOffice: 'Miftah', notes: 'typenya overtime SOC dari jam 06.00-22.30' },
-      { date: 24, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Rheza', backOffice: 'Ira' },
-      { date: 25, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Maulana' },
-      { date: 31, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Rine' },
-    ],
-    monthNotes: [
-      'jgn lupa input SOC ya maksimal 2 hari',
-      'typenya overtime SOC dari jam 06.00-22.30'
-    ]
-  }
-]
 
 // Create a simple HTTP server for health checks
 const PORT = process.env.PORT || 10000
@@ -67,10 +45,37 @@ async function main() {
 
   console.log('✅ Email configuration verified')
 
-  // Set schedules data
-  console.log('\n📅 Loading schedules data...')
-  setSchedulesData(monthlySchedules)
-  console.log(`✅ Loaded ${monthlySchedules.length} month(s) of schedules`)
+  // Load schedules data from Gist
+  console.log('\n📅 Loading schedules data from GitHub Gist...')
+  const gistData = await fetchGistData()
+
+  // Group schedules by month
+  const monthlySchedules = gistData.schedules.reduce((acc, schedule) => {
+    const key = `${schedule.month}-${schedule.year}`
+    if (!acc[key]) {
+      acc[key] = {
+        month: schedule.month,
+        year: schedule.year,
+        schedules: [],
+        monthNotes: gistData.monthNotes
+      }
+    }
+    acc[key].schedules.push({
+      date: schedule.date,
+      day: schedule.day,
+      frontOffice: schedule.frontOffice,
+      middleOffice: schedule.middleOffice,
+      backOffice: schedule.backOffice,
+      notes: schedule.notes
+    })
+    return acc
+  }, {} as Record<string, any>)
+
+  const monthSchedulesArray = Object.values(monthlySchedules)
+
+  setSchedulesData(monthSchedulesArray)
+  console.log(`✅ Loaded ${monthSchedulesArray.length} month(s) with ${gistData.schedules.length} schedule(s)`)
+  console.log(`✅ Loaded ${gistData.developers.length} developer(s) data`)
 
   // Start schedulers
   console.log('\n⏰ Starting schedulers...')

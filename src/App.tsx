@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
+import { fetchGistData } from './services/gistService'
 
 interface DaySchedule {
   date: number
@@ -23,32 +24,52 @@ interface Cadangan {
 }
 
 function App() {
-  const [monthlySchedules, setMonthlySchedules] = useState<MonthSchedule[]>([
-    {
-      month: 'Januari',
-      year: 2026,
-      schedules: [
-        { date: 3, day: 'Sabtu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Rine' },
-        { date: 4, day: 'Minggu', frontOffice: 'Hilmi', middleOffice: 'Farhan', backOffice: 'Ira' },
-        { date: 10, day: 'Sabtu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Miftah' },
-        { date: 11, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Rheza', backOffice: 'Maulana' },
-        { date: 17, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Vigo', backOffice: 'Maulana', notes: 'jgn lupa input SOC ya maksimal 2 hari' },
-        { date: 18, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Vigo', backOffice: 'Miftah', notes: 'typenya overtime SOC dari jam 06.00-22.30' },
-        { date: 24, day: 'Sabtu', frontOffice: 'Hilmi', middleOffice: 'Rheza', backOffice: 'Ira' },
-        { date: 25, day: 'Minggu', frontOffice: 'Dirga', middleOffice: 'Alawi', backOffice: 'Maulana' },
-        { date: 31, day: 'Minggu', frontOffice: 'Ardan', middleOffice: 'Farhan', backOffice: 'Rine' },
-      ],
-      monthNotes: [
-        'Jangan lupa input SOC ya maksimal 2 hari',
-        'Type-nya overtime SOC dari jam 06.00-22.30'
-      ]
-    }
-  ])
+  const [monthlySchedules, setMonthlySchedules] = useState<MonthSchedule[]>([])
+  const [cadangan, setCadangan] = useState<Cadangan>({ backOffice: '', frontOffice: '' })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [cadangan] = useState<Cadangan>({
-    backOffice: 'Chabib',
-    frontOffice: 'Neza'
-  })
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await fetchGistData()
+
+        // Group schedules by month
+        const grouped = data.schedules.reduce((acc, schedule) => {
+          const key = `${schedule.month}-${schedule.year}`
+          if (!acc[key]) {
+            acc[key] = {
+              month: schedule.month,
+              year: schedule.year,
+              schedules: [],
+              monthNotes: data.monthNotes
+            }
+          }
+          acc[key].schedules.push({
+            date: schedule.date,
+            day: schedule.day,
+            frontOffice: schedule.frontOffice,
+            middleOffice: schedule.middleOffice,
+            backOffice: schedule.backOffice,
+            notes: schedule.notes
+          })
+          return acc
+        }, {} as Record<string, MonthSchedule>)
+
+        setMonthlySchedules(Object.values(grouped))
+        setCadangan(data.backup)
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        setError('Gagal memuat data. Silakan refresh halaman.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   const [editingCell, setEditingCell] = useState<{ monthIdx: number; scheduleIdx: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -77,6 +98,28 @@ function App() {
     } else if (e.key === 'Escape') {
       setEditingCell(null)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="app">
+        <header className="header">
+          <h1>📋 Jadwal Stand By Tim Dev</h1>
+          <p className="subtitle">Memuat data...</p>
+        </header>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="app">
+        <header className="header">
+          <h1>📋 Jadwal Stand By Tim Dev</h1>
+          <p className="subtitle" style={{ color: '#ef4444' }}>{error}</p>
+        </header>
+      </div>
+    )
   }
 
   return (
