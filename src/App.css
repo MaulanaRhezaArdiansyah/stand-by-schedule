@@ -548,38 +548,95 @@ body {
   }
 }
 
-/* Header Actions */
+/* Header Actions - Mobile First */
 .header-content {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.header-actions {
-  position: absolute;
-  top: 0;
-  right: 0;
+/* User info stays centered on all screens */
+.user-info {
   display: flex;
-  gap: 1rem;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Action buttons - mobile: stacked below email */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   align-items: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Login section centered */
+.login-section {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Desktop: buttons move to top-right */
+@media (min-width: 768px) {
+  .header {
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .action-buttons {
+    position: absolute;
+    top: 0;
+    right: 0;
+    flex-direction: row;
+    gap: 1rem;
+    width: auto;
+    max-width: none;
+  }
 }
 
 .user-badge {
   background: rgba(139, 92, 246, 0.2);
   border: 1px solid rgba(139, 92, 246, 0.4);
   color: #c4b5fd;
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1rem;
   border-radius: 12px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .user-badge {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
 }
 
 .login-btn, .add-btn, .logout-btn {
-  padding: 0.7rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 12px;
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 200px;
+}
+
+@media (min-width: 768px) {
+  .login-btn, .add-btn, .logout-btn {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.95rem;
+    width: auto;
+  }
 }
 
 .login-btn {
@@ -595,11 +652,20 @@ body {
 .add-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .add-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.add-btn:active {
+  transform: translateY(0);
 }
 
 .logout-btn {
@@ -636,17 +702,6 @@ body {
   transform: scale(1.1);
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
 
 .edit-btn-small {
   background: rgba(59, 130, 246, 0.15);

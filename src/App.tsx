@@ -150,25 +150,27 @@ function App() {
             <h1>📋 Jadwal Stand By Tim Dev</h1>
             <p className="subtitle">Jadwal Bulanan - Weekend Stand By</p>
           </div>
-          <div className="header-actions">
-            {user ? (
-              <>
+          {user ? (
+            <>
+              <div className="user-info">
                 <span className="user-badge">👤 {user.email}</span>
-                {user && (
-                  <button className="add-btn" onClick={() => setShowAddModal(true)}>
-                    ➕ Tambah Schedule
-                  </button>
-                )}
+              </div>
+              <div className="action-buttons">
+                <button className="add-btn" onClick={() => setShowAddModal(true)}>
+                  ➕ Tambah Schedule
+                </button>
                 <button className="logout-btn" onClick={handleLogout}>
                   🚪 Logout
                 </button>
-              </>
-            ) : (
+              </div>
+            </>
+          ) : (
+            <div className="login-section">
               <button className="login-btn" onClick={() => setShowLoginModal(true)}>
                 🔐 Login Admin
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </header>
 
