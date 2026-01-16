@@ -3,16 +3,17 @@ import { apiService } from '../services/apiService';
 import './LoginModal.css';
 
 interface AddScheduleModalProps {
-  onSuccess: () => void;
+  onSuccess: (newSchedule: any) => void;
   onClose: () => void;
 }
 
 export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) {
+  // Initialize with tomorrow's date
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const [selectedDate, setSelectedDate] = useState(tomorrow.toISOString().split('T')[0]);
   const [formData, setFormData] = useState({
-    month: 'Januari',
-    year: new Date().getFullYear(),
-    date: 1,
-    day: 'Sabtu',
     frontOffice: '',
     middleOffice: '',
     backOffice: '',
@@ -26,7 +27,17 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+  const convertDateToScheduleFormat = (dateString: string) => {
+    const date = new Date(dateString);
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const dateNum = date.getDate();
+    const day = days[date.getDay()];
+
+    return { month, year, date: dateNum, day };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +45,39 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
     setLoading(true);
 
     try {
-      await apiService.addSchedule(formData);
-      onSuccess();
+      const { month, year, date, day } = convertDateToScheduleFormat(selectedDate);
+
+      const result = await apiService.addSchedule({
+        month,
+        year,
+        date,
+        day,
+        frontOffice: formData.frontOffice,
+        middleOffice: formData.middleOffice,
+        backOffice: formData.backOffice,
+        notes: formData.notes
+      });
+
+      // Pass the new schedule data to parent
+      onSuccess({
+        id: result.id,
+        month,
+        year,
+        date,
+        day,
+        frontOffice: formData.frontOffice,
+        middleOffice: formData.middleOffice,
+        backOffice: formData.backOffice,
+        notes: formData.notes
+      });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add schedule');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to add schedule';
+      if (errorMsg.includes('duplicate') || errorMsg.includes('already exists')) {
+        setError('Jadwal untuk tanggal ini sudah ada. Pilih tanggal lain.');
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,66 +98,31 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Bulan</label>
-              <select
-                value={formData.month}
-                onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  borderRadius: '8px',
-                  padding: '0.8rem 1rem',
-                  color: 'white',
-                  fontSize: '1rem'
-                }}
-              >
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Tahun</label>
-              <input
-                type="number"
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                required
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Tanggal</label>
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: parseInt(e.target.value) })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Hari</label>
-              <select
-                value={formData.day}
-                onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  borderRadius: '8px',
-                  padding: '0.8rem 1rem',
-                  color: 'white',
-                  fontSize: '1rem'
-                }}
-              >
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
+          <div className="form-group">
+            <label>Pilih Tanggal</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              required
+              style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: '8px',
+                padding: '0.8rem 1rem',
+                color: 'white',
+                fontSize: '1rem',
+                width: '100%',
+                colorScheme: 'dark'
+              }}
+            />
+            <small style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem', display: 'block' }}>
+              {selectedDate && (() => {
+                const { month, year, date, day } = convertDateToScheduleFormat(selectedDate);
+                return `${day}, ${date} ${month} ${year}`;
+              })()}
+            </small>
           </div>
 
           <div className="form-group">

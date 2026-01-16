@@ -5,6 +5,7 @@ import { apiService } from './services/apiService'
 import { LoginModal } from './components/LoginModal'
 import { AddScheduleModal } from './components/AddScheduleModal'
 import { EditScheduleModal } from './components/EditScheduleModal'
+import { DeleteConfirmModal } from './components/DeleteConfirmModal'
 
 interface DaySchedule extends Schedule {}
 
@@ -32,6 +33,8 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState<DaySchedule | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingSchedule, setDeletingSchedule] = useState<{ id: string; schedule: DaySchedule } | null>(null)
 
   // Load data
   const loadData = async () => {
@@ -62,8 +65,15 @@ function App() {
         return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
       })
 
+      // Convert backup IDs to names
+      const backOfficeDev = data.developers.find(d => d.id === data.backup.backOffice)
+      const frontOfficeDev = data.developers.find(d => d.id === data.backup.frontOffice)
+
       setMonthlySchedules(sortedMonths)
-      setCadangan(data.backup)
+      setCadangan({
+        backOffice: backOfficeDev?.name || data.backup.backOffice,
+        frontOffice: frontOfficeDev?.name || data.backup.frontOffice
+      })
     } catch (err) {
       console.error('Failed to load data:', err)
       setError('Gagal memuat data. Silakan refresh halaman.')
@@ -92,21 +102,90 @@ function App() {
     setUser(null)
   }
 
-  const handleDelete = async (scheduleId: string) => {
-    if (!confirm('Yakin mau hapus schedule ini?')) return
+  const canDeleteSchedule = (schedule: DaySchedule): boolean => {
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const scheduleMonthIndex = months.indexOf(schedule.month);
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    // Allow delete if schedule is in current month or future months
+    if (schedule.year > currentYear) return true;
+    if (schedule.year === currentYear && scheduleMonthIndex >= currentMonth) return true;
+
+    return false;
+  };
+
+  const handleDeleteClick = (scheduleId: string, schedule: DaySchedule) => {
+    if (!canDeleteSchedule(schedule)) {
+      alert('Hanya bisa menghapus jadwal bulan ini atau yang akan datang.');
+      return;
+    }
+
+    setDeletingSchedule({ id: scheduleId, schedule });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingSchedule) return;
 
     try {
-      await apiService.deleteSchedule(scheduleId)
-      invalidateCache()
-      await loadData()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete')
-    }
-  }
+      await apiService.deleteSchedule(deletingSchedule.id);
+      invalidateCache();
 
-  const handleAddSuccess = async () => {
-    invalidateCache()
-    await loadData()
+      // Optimistic update: remove schedule from state without full reload
+      setMonthlySchedules(prev =>
+        prev.map(month => ({
+          ...month,
+          schedules: month.schedules.filter(s => s.id !== deletingSchedule.id)
+        })).filter(month => month.schedules.length > 0) // Remove empty months
+      );
+
+      setShowDeleteModal(false);
+      setDeletingSchedule(null);
+    } catch (err) {
+      // On error, reload to ensure consistency
+      await loadData();
+      alert(err instanceof Error ? err.message : 'Failed to delete');
+    }
+  };
+
+  const handleAddSuccess = async (newSchedule: DaySchedule) => {
+    invalidateCache();
+
+    // Optimistic update: add new schedule to state without full reload
+    const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+    setMonthlySchedules(prev => {
+      const key = `${newSchedule.month}-${newSchedule.year}`;
+      const existingMonthIndex = prev.findIndex(m => `${m.month}-${m.year}` === key);
+
+      if (existingMonthIndex >= 0) {
+        // Month already exists, add schedule to it
+        const updated = [...prev];
+        updated[existingMonthIndex] = {
+          ...updated[existingMonthIndex],
+          schedules: [...updated[existingMonthIndex].schedules, newSchedule].sort((a, b) => a.date - b.date)
+        };
+        return updated;
+      } else {
+        // New month, create month section
+        const newMonth: MonthSchedule = {
+          month: newSchedule.month,
+          year: newSchedule.year,
+          schedules: [newSchedule],
+          monthNotes: prev[0]?.monthNotes || []
+        };
+
+        // Add and sort months
+        const updated = [...prev, newMonth].sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year;
+          return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
+        });
+        return updated;
+      }
+    });
   }
 
   const handleEdit = (schedule: DaySchedule) => {
@@ -114,10 +193,48 @@ function App() {
     setShowEditModal(true)
   }
 
-  const handleEditSuccess = async () => {
-    invalidateCache()
-    await loadData()
-    setEditingSchedule(null)
+  const handleEditSuccess = async (updatedSchedule: DaySchedule) => {
+    invalidateCache();
+
+    // Optimistic update: update schedule in state without full reload
+    const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+    setMonthlySchedules(prev => {
+      // Remove from old location
+      let schedules = prev.map(month => ({
+        ...month,
+        schedules: month.schedules.filter(s => s.id !== updatedSchedule.id)
+      })).filter(month => month.schedules.length > 0);
+
+      // Add to new location
+      const key = `${updatedSchedule.month}-${updatedSchedule.year}`;
+      const existingMonthIndex = schedules.findIndex(m => `${m.month}-${m.year}` === key);
+
+      if (existingMonthIndex >= 0) {
+        // Month already exists, add schedule to it
+        schedules[existingMonthIndex] = {
+          ...schedules[existingMonthIndex],
+          schedules: [...schedules[existingMonthIndex].schedules, updatedSchedule].sort((a, b) => a.date - b.date)
+        };
+      } else {
+        // New month, create month section
+        const newMonth: MonthSchedule = {
+          month: updatedSchedule.month,
+          year: updatedSchedule.year,
+          schedules: [updatedSchedule],
+          monthNotes: prev[0]?.monthNotes || []
+        };
+
+        schedules = [...schedules, newMonth].sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year;
+          return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
+        });
+      }
+
+      return schedules;
+    });
+
+    setEditingSchedule(null);
   }
 
   if (loading) {
@@ -213,8 +330,13 @@ function App() {
                             </button>
                             <button
                               className="delete-btn-small"
-                              onClick={() => handleDelete(schedule.id)}
-                              title="Hapus schedule"
+                              onClick={() => handleDeleteClick(schedule.id, schedule)}
+                              title={canDeleteSchedule(schedule) ? "Hapus schedule" : "Tidak bisa hapus jadwal masa lalu"}
+                              disabled={!canDeleteSchedule(schedule)}
+                              style={{
+                                opacity: canDeleteSchedule(schedule) ? 1 : 0.5,
+                                cursor: canDeleteSchedule(schedule) ? 'pointer' : 'not-allowed'
+                              }}
                             >
                               🗑️
                             </button>
@@ -308,6 +430,17 @@ function App() {
           onClose={() => {
             setShowEditModal(false)
             setEditingSchedule(null)
+          }}
+        />
+      )}
+
+      {showDeleteModal && deletingSchedule && (
+        <DeleteConfirmModal
+          scheduleName={`${deletingSchedule.schedule.day}, ${deletingSchedule.schedule.date} ${deletingSchedule.schedule.month} ${deletingSchedule.schedule.year}`}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => {
+            setShowDeleteModal(false)
+            setDeletingSchedule(null)
           }}
         />
       )}
