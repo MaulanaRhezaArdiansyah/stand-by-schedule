@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { apiService, type Schedule } from '../services/apiService';
+import { apiService } from '../services/apiService';
+import type { Schedule } from '../services/supabaseService';
 import './LoginModal.css';
 
 interface EditScheduleModalProps {
   schedule: Schedule;
-  onSuccess: (updatedSchedule: any) => void;
+  onSuccess: (updatedSchedule: Schedule) => void;
   onClose: () => void;
 }
 
