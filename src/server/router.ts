@@ -1,9 +1,9 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { authenticateUser, generateToken, authMiddleware, requireAdmin, type AuthRequest } from './auth.js';
 import { fetchSupabaseData, invalidateCache } from './supabaseService.js';
-import { updateSupabaseData } from './supabaseUpdater.js';
+import { insertSchedule, updateSchedule as updateScheduleDB, deleteSchedule as deleteScheduleDB } from './supabaseUpdater.js';
 import type { Schedule } from './supabaseService.js';
 import { setSchedulesData } from '../services/scheduler.js';
+import { authMiddleware, requireAdmin, type AuthRequest } from './auth.js';
 
 // Helper to parse request body
 async function parseBody(req: IncomingMessage): Promise<any> {
@@ -52,52 +52,61 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
     return true;
   }
 
-  // Login endpoint
-  if (url === '/api/auth/login' && method === 'POST') {
-    try {
-      const body = await parseBody(req);
-      const { username, password } = body;
+  // // Login endpoint
+  // if (url === '/api/auth/login' && method === 'POST') {
+  //   try {
+  //     const body = await parseBody(req);
+  //     const { username, password } = body;
 
-      if (!username || !password) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Username and password required' }));
-        return true;
-      }
+  //     if (!username || !password) {
+  //       res.writeHead(400, { 'Content-Type': 'application/json' });
+  //       res.end(JSON.stringify({ error: 'Username and password required' }));
+  //       return true;
+  //     }
 
-      const user = await authenticateUser(username, password);
-      if (!user) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid credentials' }));
-        return true;
-      }
+  //     const user = await authenticateUser(username, password);
+  //     if (!user) {
+  //       res.writeHead(401, { 'Content-Type': 'application/json' });
+  //       res.end(JSON.stringify({ error: 'Invalid credentials' }));
+  //       return true;
+  //     }
 
-      const token = generateToken(user.username, user.role);
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        token,
-        user: {
-          username: user.username,
-          role: user.role
-        }
-      }));
-      return true;
-    } catch (error) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Internal server error' }));
-      return true;
-    }
-  }
+  //     const token = generateToken(user.username, user.role);
+  //     res.writeHead(200, { 'Content-Type': 'application/json' });
+  //     res.end(JSON.stringify({
+  //       token,
+  //       user: {
+  //         username: user.username,
+  //         role: user.role
+  //       }
+  //     }));
+  //     return true;
+  //   } catch (error) {
+  //     res.writeHead(500, { 'Content-Type': 'application/json' });
+  //     res.end(JSON.stringify({ error: 'Internal server error' }));
+  //     return true;
+  //   }
+  // }
 
   // Verify token endpoint
-  if (url === '/api/auth/verify' && method === 'GET') {
-    const authReq = req as AuthRequest;
-    if (!authMiddleware(authReq, res)) return true;
+  // if (url === '/api/auth/verify' && method === 'GET') {
+  //   const authReq = req as AuthRequest;
+  //   if (!authMiddleware(authReq, res)) return true;
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      user: authReq.user
-    }));
-    return true;
+  //   res.writeHead(200, { 'Content-Type': 'application/json' });
+  //   res.end(JSON.stringify({
+  //     user: authReq.user
+  //   }));
+  //   return true;
+  // }
+
+  if (url === '/api/auth/verify' && method === 'GET') {
+    const authReq = req as AuthRequest
+    if (!(await authMiddleware(authReq, res))) return true
+
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ user: authReq.user }))
+    return true
   }
 
   // Get all data (public)
@@ -116,12 +125,12 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
   // Add schedule (admin only)
   if (url === '/api/schedules' && method === 'POST') {
-    const authReq = req as AuthRequest;
-    if (!requireAdmin(authReq, res)) return true;
+    const authReq = req as AuthRequest
+    if (!(await requireAdmin(authReq, res))) return true
 
     try {
       const body = await parseBody(req);
-      const newSchedule: Schedule = body;
+      const newSchedule = body;
 
       // Validate schedule
       if (!newSchedule.month || !newSchedule.year || !newSchedule.date) {
@@ -130,18 +139,11 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
         return true;
       }
 
-      // Generate ID
-      newSchedule.id = `${Date.now()}`;
-
-      // Fetch current data
-      const data = await fetchSupabaseData();
-      data.schedules.push(newSchedule);
-
-      // Update Supabase
-      const success = await updateSupabaseData(data);
-      if (!success) {
+      // Insert to Supabase
+      const inserted = await insertSchedule(newSchedule);
+      if (!inserted) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
+        res.end(JSON.stringify({ error: 'Failed to insert schedule to Supabase' }));
         return true;
       }
 
@@ -150,7 +152,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       await refreshSchedulerData();
 
       res.writeHead(201, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, schedule: newSchedule }));
+      res.end(JSON.stringify({ success: true, schedule: inserted }));
       return true;
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -161,32 +163,19 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
   // Update schedule (admin only)
   if (url.startsWith('/api/schedules/') && method === 'PUT') {
-    const authReq = req as AuthRequest;
-    if (!requireAdmin(authReq, res)) return true;
+    const authReq = req as AuthRequest
+    if (!(await requireAdmin(authReq, res))) return true
 
     try {
       const scheduleId = url.split('/')[3];
       const body = await parseBody(req);
-      const updatedSchedule: Partial<Schedule> = body;
+      const updates: Partial<Schedule> = body;
 
-      // Fetch current data
-      const data = await fetchSupabaseData();
-      const index = data.schedules.findIndex(s => s.id === scheduleId);
-
-      if (index === -1) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Schedule not found' }));
-        return true;
-      }
-
-      // Update schedule
-      data.schedules[index] = { ...data.schedules[index], ...updatedSchedule };
-
-      // Update Supabase
-      const success = await updateSupabaseData(data);
-      if (!success) {
+      // Update in Supabase
+      const updated = await updateScheduleDB(scheduleId, updates);
+      if (!updated) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
+        res.end(JSON.stringify({ error: 'Failed to update schedule in Supabase' }));
         return true;
       }
 
@@ -195,7 +184,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       await refreshSchedulerData();
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, schedule: data.schedules[index] }));
+      res.end(JSON.stringify({ success: true, schedule: updated }));
       return true;
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -206,30 +195,17 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
   // Delete schedule (admin only)
   if (url.startsWith('/api/schedules/') && method === 'DELETE') {
-    const authReq = req as AuthRequest;
-    if (!requireAdmin(authReq, res)) return true;
+    const authReq = req as AuthRequest
+    if (!(await requireAdmin(authReq, res))) return true
 
     try {
       const scheduleId = url.split('/')[3];
 
-      // Fetch current data
-      const data = await fetchSupabaseData();
-      const index = data.schedules.findIndex(s => s.id === scheduleId);
-
-      if (index === -1) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Schedule not found' }));
-        return true;
-      }
-
-      // Remove schedule
-      data.schedules.splice(index, 1);
-
-      // Update Supabase
-      const success = await updateSupabaseData(data);
+      // Delete from Supabase
+      const success = await deleteScheduleDB(scheduleId);
       if (!success) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to update Supabase' }));
+        res.end(JSON.stringify({ error: 'Failed to delete schedule from Supabase' }));
         return true;
       }
 

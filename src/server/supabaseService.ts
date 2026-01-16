@@ -32,7 +32,6 @@ export interface ScheduleData {
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
-const SUPABASE_DATA_ID = process.env.SUPABASE_DATA_ID || 'default';
 
 let cachedData: ScheduleData | null = null;
 let lastFetchTime = 0;
@@ -42,10 +41,6 @@ function ensureSupabaseConfig() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
   }
-}
-
-function buildSupabaseUrl() {
-  return `${SUPABASE_URL}/rest/v1/schedules?select=data&id=eq.${SUPABASE_DATA_ID}&limit=1`;
 }
 
 export async function fetchSupabaseData(): Promise<ScheduleData> {
@@ -59,25 +54,84 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
   ensureSupabaseConfig();
 
   try {
-    console.log('🌐 Fetching Supabase data from:', SUPABASE_URL);
-    const response = await fetch(buildSupabaseUrl(), {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+    console.log('🌐 Fetching data from Supabase tables...');
+
+    const headers = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json'
+    };
+
+    // Fetch schedules
+    const schedulesUrl = `${SUPABASE_URL}/rest/v1/schedules?select=*&order=year.asc,month.asc,date.asc`;
+    const schedulesRes = await fetch(schedulesUrl, { headers });
+
+    if (!schedulesRes.ok) {
+      const errorText = await schedulesRes.text();
+      throw new Error(`Failed to fetch schedules: ${schedulesRes.statusText} - ${errorText}`);
+    }
+
+    const schedulesRaw = await schedulesRes.json();
+
+    // Fetch developers
+    const developersUrl = `${SUPABASE_URL}/rest/v1/developers?select=*`;
+    const developersRes = await fetch(developersUrl, { headers });
+
+    if (!developersRes.ok) {
+      const errorText = await developersRes.text();
+      throw new Error(`Failed to fetch developers: ${developersRes.statusText} - ${errorText}`);
+    }
+
+    const developers: Developer[] = await developersRes.json();
+
+    // Fetch month notes
+    const monthNotesUrl = `${SUPABASE_URL}/rest/v1/month_notes?select=*&order=year.asc,month.asc`;
+    const monthNotesRes = await fetch(monthNotesUrl, { headers });
+
+    if (!monthNotesRes.ok) {
+      const errorText = await monthNotesRes.text();
+      throw new Error(`Failed to fetch month_notes: ${monthNotesRes.statusText} - ${errorText}`);
+    }
+
+    const monthNotesRaw = await monthNotesRes.json();
+    const monthNotes = monthNotesRaw.map((mn: any) => mn.note || '');
+
+    // Fetch backup config (just get the first one or default)
+    const backupUrl = `${SUPABASE_URL}/rest/v1/backup_config?select=*&limit=1`;
+    const backupRes = await fetch(backupUrl, { headers });
+
+    let backup: Backup = { backOffice: '', frontOffice: '' };
+    if (backupRes.ok) {
+      const backupRaw = await backupRes.json();
+      if (backupRaw.length > 0) {
+        backup = {
+          backOffice: backupRaw[0].back_office_id || '',
+          frontOffice: backupRaw[0].front_office_id || ''
+        };
       }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Supabase data: ${response.statusText}`);
     }
 
-    const payload: Array<{ data: ScheduleData }> = await response.json();
-    const data = payload[0]?.data;
+    // Map schedules with office IDs to office names
+    const schedules: Schedule[] = schedulesRaw.map((s: any) => ({
+      id: String(s.id),
+      month: s.month,
+      year: s.year,
+      date: s.date,
+      day: s.day,
+      frontOffice: s.front_office_id || '',
+      middleOffice: s.middle_office_id || '',
+      backOffice: s.back_office_id || '',
+      notes: s.notes || ''
+    }));
 
-    if (!data) {
-      throw new Error('Supabase data is empty. Ensure schedules has a row with matching id.');
-    }
+    const data: ScheduleData = {
+      developers,
+      schedules,
+      backup,
+      monthNotes
+    };
 
+    // Update cache
     cachedData = data;
     lastFetchTime = now;
 
@@ -86,6 +140,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
   } catch (error) {
     console.error('❌ Error fetching Supabase data:', error);
 
+    // Return cached data if available, even if expired
     if (cachedData) {
       console.warn('⚠️ Using expired cache due to fetch error');
       return cachedData;

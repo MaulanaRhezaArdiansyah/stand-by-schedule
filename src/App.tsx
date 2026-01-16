@@ -27,7 +27,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
 
   // Auth state
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [user, setUser] = useState<{ email: string } | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -76,14 +76,14 @@ function App() {
     loadData()
 
     // Check if already logged in
-    apiService.verifyToken().then(result => {
-      if (result) {
-        setUser(result.user)
+    apiService.verifySession().then(result => {
+      if (result?.email) {
+        setUser({ email: result.email })
       }
     })
   }, [])
 
-  const handleLogin = (userData: { username: string; role: string }) => {
+  const handleLogin = (userData: { email: string }) => {
     setUser(userData)
   }
 
@@ -153,8 +153,8 @@ function App() {
           <div className="header-actions">
             {user ? (
               <>
-                <span className="user-badge">👤 {user.username}</span>
-                {user.role === 'admin' && (
+                <span className="user-badge">👤 {user.email}</span>
+                {user && (
                   <button className="add-btn" onClick={() => setShowAddModal(true)}>
                     ➕ Tambah Schedule
                   </button>
@@ -189,7 +189,7 @@ function App() {
                       <th className="fo-header">Front Office</th>
                       <th className="mo-header">Middle Office</th>
                       <th className="bo-header">Back Office</th>
-                      {user?.role === 'admin' && <th>Aksi</th>}
+                      {user && <th>Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -200,7 +200,7 @@ function App() {
                         <td className="fo-cell">{schedule.frontOffice}</td>
                         <td className="mo-cell">{schedule.middleOffice}</td>
                         <td className="bo-cell">{schedule.backOffice}</td>
-                        {user?.role === 'admin' && (
+                        {user && (
                           <td className="action-cell">
                             <button
                               className="edit-btn-small"

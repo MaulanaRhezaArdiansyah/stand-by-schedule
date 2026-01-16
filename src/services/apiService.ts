@@ -1,12 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10001';
 
-export interface LoginResponse {
-  token: string;
-  user: {
-    username: string;
-    role: string;
-  };
-}
+import { supabase } from '../lib/supabase';
 
 export interface Schedule {
   id: string;
@@ -21,82 +15,60 @@ export interface Schedule {
 }
 
 class ApiService {
-  private token: string | null = null;
+  /**
+   * Ambil access token Supabase (untuk dipakai ke backend kamu)
+   */
+  private async getAccessToken(): Promise<string> {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
 
-  constructor() {
-    // Load token from localStorage
-    this.token = localStorage.getItem('auth_token');
+    const token = data.session?.access_token;
+    if (!token) throw new Error('Not authenticated');
+
+    return token;
   }
 
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('auth_token', token);
-  }
-
-  clearToken() {
-    this.token = null;
-    localStorage.removeItem('auth_token');
-  }
-
-  getToken(): string | null {
-    return this.token;
-  }
-
-  async login(username: string, password: string): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
+  /**
+   * LOGIN via Supabase (bukan /api/auth/login)
+   */
+  async login(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
-    }
-
-    const data: LoginResponse = await response.json();
-    this.setToken(data.token);
+    if (error) throw error;
     return data;
   }
 
-  async verifyToken(): Promise<{ user: { username: string; role: string } } | null> {
-    if (!this.token) return null;
+  /**
+   * Cek apakah user sudah login
+   */
+  async verifySession(): Promise<{ email?: string } | null> {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) return null;
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-        },
-      });
-
-      if (!response.ok) {
-        this.clearToken();
-        return null;
-      }
-
-      return await response.json();
-    } catch (error) {
-      this.clearToken();
-      return null;
-    }
+    return { email: data.session.user.email ?? undefined };
   }
 
+  /**
+   * CRUD schedules tetap lewat backend kamu,
+   * tapi Authorization pakai token Supabase.
+   */
   async addSchedule(schedule: Omit<Schedule, 'id'>): Promise<Schedule> {
-    if (!this.token) throw new Error('Not authenticated');
+    const token = await this.getAccessToken();
 
     const response = await fetch(`${API_BASE_URL}/api/schedules`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(schedule),
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Failed to add schedule');
     }
 
@@ -105,19 +77,19 @@ class ApiService {
   }
 
   async updateSchedule(id: string, schedule: Partial<Schedule>): Promise<Schedule> {
-    if (!this.token) throw new Error('Not authenticated');
+    const token = await this.getAccessToken();
 
     const response = await fetch(`${API_BASE_URL}/api/schedules/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(schedule),
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Failed to update schedule');
     }
 
@@ -126,23 +98,26 @@ class ApiService {
   }
 
   async deleteSchedule(id: string): Promise<void> {
-    if (!this.token) throw new Error('Not authenticated');
+    const token = await this.getAccessToken();
 
     const response = await fetch(`${API_BASE_URL}/api/schedules/${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${this.token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Failed to delete schedule');
     }
   }
 
-  logout() {
-    this.clearToken();
+  /**
+   * Logout Supabase
+   */
+  async logout() {
+    await supabase.auth.signOut();
   }
 }
 
