@@ -25,6 +25,44 @@ export interface Backup {
   frontOffice: string
 }
 
+// Raw data types from Supabase
+interface RawViewSchedule {
+  id: number | string
+  month: string
+  year: number
+  date: number
+  day: string
+  front_office: string
+  middle_office: string
+  back_office: string
+  notes?: string
+}
+
+interface RawSchedule {
+  id: number | string
+  month: string
+  year: number
+  date: number
+  day: string
+  front_office_id: string
+  middle_office_id: string
+  back_office_id: string
+  notes?: string
+}
+
+interface RawBackupConfig {
+  year: number
+  month: string
+  back_office_id: string
+  front_office_id: string
+}
+
+interface RawMonthNote {
+  note: string
+  year: number
+  month: string
+}
+
 export interface ScheduleData {
   developers: Developer[]
   schedules: Schedule[]
@@ -66,7 +104,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
 
   if (devErr) throw new Error(`Failed to load developers: ${devErr.message}`)
 
-  const developers: Developer[] = (devs ?? []) as any
+  const developers: Developer[] = (devs ?? []) as Developer[]
   const devMap = new Map(developers.map(d => [d.id, d.name]))
 
   // 2) Schedules
@@ -81,7 +119,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
       .order('date', { ascending: true })
 
     if (!vsErr && vs) {
-      schedules = (vs as any[]).map(r => ({
+      schedules = (vs as RawViewSchedule[]).map(r => ({
         id: String(r.id),
         month: r.month,
         year: r.year,
@@ -102,7 +140,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
 
       if (sErr) throw new Error(`Failed to load schedules: ${sErr.message}`)
 
-      schedules = (ss as any[]).map(r => ({
+      schedules = (ss as RawSchedule[]).map(r => ({
         id: String(r.id),
         month: r.month,
         year: r.year,
@@ -126,7 +164,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
     if (latestYM) q = q.eq('year', latestYM.year).eq('month', latestYM.month)
     const { data: bc, error: bErr } = await q.limit(1)
     if (bErr) throw new Error(`Failed to load backup config: ${bErr.message}`)
-    const row: any = bc?.[0]
+    const row = bc?.[0] as RawBackupConfig | undefined
     if (row) {
       backup = {
         backOffice: devMap.get(row.back_office_id) ?? row.back_office_id ?? '',
@@ -142,7 +180,7 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
     if (latestYM) q = q.eq('year', latestYM.year).eq('month', latestYM.month)
     const { data: mn, error: nErr } = await q
     if (nErr) throw new Error(`Failed to load month notes: ${nErr.message}`)
-    monthNotes = (mn ?? []).map((r: any) => r.note)
+    monthNotes = (mn as RawMonthNote[] ?? []).map(r => r.note)
   }
 
   const data: ScheduleData = { developers, schedules, backup, monthNotes }

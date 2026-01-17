@@ -5,8 +5,33 @@ import type { Schedule } from './supabaseService.js';
 import { setSchedulesData } from '../services/scheduler.js';
 import { authMiddleware, requireAdmin, type AuthRequest } from './auth.js';
 
+interface MonthlySchedule {
+  month: string;
+  year: number;
+  schedules: Array<{
+    date: number;
+    day: string;
+    frontOffice: string;
+    middleOffice: string;
+    backOffice: string;
+    notes?: string;
+  }>;
+  monthNotes: string[];
+}
+
+interface ScheduleInput {
+  month?: string;
+  year?: number;
+  date?: number;
+  day?: string;
+  frontOffice?: string;
+  middleOffice?: string;
+  backOffice?: string;
+  notes?: string;
+}
+
 // Helper to parse request body
-async function parseBody(req: IncomingMessage): Promise<any> {
+async function parseBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
@@ -129,18 +154,17 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
     if (!(await requireAdmin(authReq, res))) return true
 
     try {
-      const body = await parseBody(req);
-      const newSchedule = body;
+      const body = await parseBody(req) as ScheduleInput;
 
       // Validate schedule
-      if (!newSchedule.month || !newSchedule.year || !newSchedule.date) {
+      if (!body.month || !body.year || !body.date) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Invalid schedule data' }));
         return true;
       }
 
       // Insert to Supabase
-      const inserted = await insertSchedule(newSchedule);
+      const inserted = await insertSchedule(body as Omit<Schedule, 'id'>);
       if (!inserted) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Failed to insert schedule to Supabase' }));
@@ -168,8 +192,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
     try {
       const scheduleId = url.split('/')[3];
-      const body = await parseBody(req);
-      const updates: Partial<Schedule> = body;
+      const updates = await parseBody(req) as Partial<Schedule>;
 
       // Update in Supabase
       const updated = await updateScheduleDB(scheduleId, updates);
@@ -249,7 +272,7 @@ async function refreshSchedulerData() {
       notes: schedule.notes
     });
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, MonthlySchedule>);
 
   const monthSchedulesArray = Object.values(monthlySchedules);
   setSchedulesData(monthSchedulesArray);

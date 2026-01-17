@@ -30,6 +30,23 @@ export interface ScheduleData {
   monthNotes: string[];
 }
 
+// Raw data types from Supabase REST API
+interface RawMonthNote {
+  note: string;
+}
+
+interface RawSchedule {
+  id: number | string;
+  month: string;
+  year: number;
+  date: number;
+  day: string;
+  front_office_id: string;
+  middle_office_id: string;
+  back_office_id: string;
+  notes?: string;
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
@@ -93,8 +110,8 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
       throw new Error(`Failed to fetch month_notes: ${monthNotesRes.statusText} - ${errorText}`);
     }
 
-    const monthNotesRaw = await monthNotesRes.json();
-    const monthNotes = monthNotesRaw.map((mn: any) => mn.note || '');
+    const monthNotesRaw: RawMonthNote[] = await monthNotesRes.json();
+    const monthNotes = monthNotesRaw.map(mn => mn.note || '');
 
     // Fetch backup config (just get the first one or default)
     const backupUrl = `${SUPABASE_URL}/rest/v1/backup_config?select=*&limit=1`;
@@ -112,7 +129,8 @@ export async function fetchSupabaseData(): Promise<ScheduleData> {
     }
 
     // Map schedules with office IDs to office names
-    const schedules: Schedule[] = schedulesRaw.map((s: any) => ({
+    const schedulesTyped: RawSchedule[] = schedulesRaw;
+    const schedules: Schedule[] = schedulesTyped.map(s => ({
       id: String(s.id),
       month: s.month,
       year: s.year,

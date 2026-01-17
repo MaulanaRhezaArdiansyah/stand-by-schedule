@@ -5,6 +5,20 @@ import { createServer } from 'http'
 import { fetchSupabaseData } from './supabaseService.js'
 import { handleRequest } from './router.js'
 
+interface MonthlySchedule {
+  month: string
+  year: number
+  schedules: Array<{
+    date: number
+    day: string
+    frontOffice: string
+    middleOffice: string
+    backOffice: string
+    notes?: string
+  }>
+  monthNotes: string[]
+}
+
 // Load environment variables
 dotenv.config()
 
@@ -71,7 +85,7 @@ async function main() {
       notes: schedule.notes
     })
     return acc
-  }, {} as Record<string, any>)
+  }, {} as Record<string, MonthlySchedule>)
 
   const monthSchedulesArray = Object.values(monthlySchedules)
 
