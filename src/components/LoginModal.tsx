@@ -3,8 +3,8 @@ import { apiService } from '../services/apiService'
 import './LoginModal.css'
 
 interface LoginModalProps {
-  onLogin: (user: { email: string }) => void
-  onClose: () => void
+  readonly onLogin: (user: { email: string }) => void
+  readonly onClose: () => void
 }
 
 export function LoginModal({ onLogin, onClose }: LoginModalProps) {
@@ -20,10 +20,7 @@ export function LoginModal({ onLogin, onClose }: LoginModalProps) {
 
     try {
       await apiService.login(email, password)
-
-      // Setelah login sukses, set user sederhana untuk UI gating
       onLogin({ email })
-
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -32,18 +29,37 @@ export function LoginModal({ onLogin, onClose }: LoginModalProps) {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="modal-overlay"
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-modal-title"
+    >
+      <div className="modal-content">
         <div className="modal-header">
-          <h2>🔐 Login</h2>
-          <button className="close-btn" onClick={onClose}>
+          <h2 id="login-modal-title">Login</h2>
+          <button className="close-btn" onClick={onClose} aria-label="Tutup">
             ×
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {error && <div className="error-message">⚠️ {error}</div>}
+          {error && <div className="error-message" role="alert">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="email">Email</label>

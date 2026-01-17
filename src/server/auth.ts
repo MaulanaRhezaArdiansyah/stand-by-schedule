@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'http'
+import { IncomingMessage, ServerResponse } from 'node:http'
 import { supabaseAdmin } from './supabaseAdmin.js'
 
 export interface AuthRequest extends IncomingMessage {

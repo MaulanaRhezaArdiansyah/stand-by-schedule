@@ -1,18 +1,37 @@
 import './LoginModal.css';
 
 interface DeleteConfirmModalProps {
-  scheduleName: string;
-  onConfirm: () => void;
-  onCancel: () => void;
+  readonly scheduleName: string;
+  readonly onConfirm: () => void;
+  readonly onCancel: () => void;
 }
 
 export function DeleteConfirmModal({ scheduleName, onConfirm, onCancel }: DeleteConfirmModalProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onCancel();
+    }
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onCancel();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+    <div
+      className="modal-overlay"
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
+    >
+      <div className="modal-content" style={{ maxWidth: '450px' }}>
         <div className="modal-header">
-          <h2>🗑️ Hapus Schedule</h2>
-          <button className="close-btn" onClick={onCancel}>×</button>
+          <h2 id="delete-modal-title">Hapus Schedule</h2>
+          <button className="close-btn" onClick={onCancel} aria-label="Tutup">×</button>
         </div>
 
         <div style={{ padding: '1.5rem 0' }}>
@@ -37,7 +56,9 @@ export function DeleteConfirmModal({ scheduleName, onConfirm, onCancel }: Delete
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
+            type="button"
             onClick={onCancel}
+            className="cancel-btn"
             style={{
               flex: 1,
               background: 'rgba(255, 255, 255, 0.1)',
@@ -50,17 +71,13 @@ export function DeleteConfirmModal({ scheduleName, onConfirm, onCancel }: Delete
               cursor: 'pointer',
               transition: 'all 0.3s ease'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            }}
           >
             Batal
           </button>
           <button
+            type="button"
             onClick={onConfirm}
+            className="delete-confirm-btn"
             style={{
               flex: 1,
               background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
@@ -72,14 +89,6 @@ export function DeleteConfirmModal({ scheduleName, onConfirm, onCancel }: Delete
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.3s ease'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.4)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             Hapus

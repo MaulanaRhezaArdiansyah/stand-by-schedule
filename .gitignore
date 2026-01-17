@@ -28,9 +28,14 @@ dist-ssr
 
 # Environment variables
 .env
+.env.local
 
 # Temporary files
 tmpclaude-*
 
 # Claude Code
 .claude/
+
+# SonarQube
+.scannerwork/
+coverage/

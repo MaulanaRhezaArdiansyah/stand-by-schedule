@@ -4,9 +4,9 @@ import type { Schedule } from '../services/supabaseService';
 import './LoginModal.css';
 
 interface EditScheduleModalProps {
-  schedule: Schedule;
-  onSuccess: (updatedSchedule: Schedule) => void;
-  onClose: () => void;
+  readonly schedule: Schedule;
+  readonly onSuccess: (updatedSchedule: Schedule) => void;
+  readonly onClose: () => void;
 }
 
 export function EditScheduleModal({ schedule, onSuccess, onClose }: EditScheduleModalProps) {
@@ -17,10 +17,8 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
 
   const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-  // Convert schedule to date string format
   const scheduleToDateString = () => {
     const monthIndex = months.indexOf(schedule.month);
-    // Pad month and date with leading zeros
     const monthStr = String(monthIndex + 1).padStart(2, '0');
     const dateStr = String(schedule.date).padStart(2, '0');
     return `${schedule.year}-${monthStr}-${dateStr}`;
@@ -65,7 +63,6 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
         notes: formData.notes
       });
 
-      // Pass the updated schedule data to parent
       onSuccess({
         id: schedule.id,
         month,
@@ -90,24 +87,44 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+    <div
+      className="modal-overlay"
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-modal-title"
+    >
+      <div className="modal-content" style={{ maxWidth: '500px' }}>
         <div className="modal-header">
-          <h2>✏️ Edit Schedule</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <h2 id="edit-modal-title">Edit Schedule</h2>
+          <button className="close-btn" onClick={onClose} aria-label="Tutup">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && (
-            <div className="error-message">
-              ⚠️ {error}
+            <div className="error-message" role="alert">
+              {error}
             </div>
           )}
 
           <div className="form-group">
-            <label>Pilih Tanggal</label>
+            <label htmlFor="edit-schedule-date">Pilih Tanggal</label>
             <input
+              id="edit-schedule-date"
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -133,8 +150,9 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
           </div>
 
           <div className="form-group">
-            <label>Front Office</label>
+            <label htmlFor="edit-front-office">Front Office</label>
             <input
+              id="edit-front-office"
               type="text"
               value={formData.frontOffice}
               onChange={(e) => setFormData({ ...formData, frontOffice: e.target.value })}
@@ -144,8 +162,9 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
           </div>
 
           <div className="form-group">
-            <label>Middle Office</label>
+            <label htmlFor="edit-middle-office">Middle Office</label>
             <input
+              id="edit-middle-office"
               type="text"
               value={formData.middleOffice}
               onChange={(e) => setFormData({ ...formData, middleOffice: e.target.value })}
@@ -155,8 +174,9 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
           </div>
 
           <div className="form-group">
-            <label>Back Office</label>
+            <label htmlFor="edit-back-office">Back Office</label>
             <input
+              id="edit-back-office"
               type="text"
               value={formData.backOffice}
               onChange={(e) => setFormData({ ...formData, backOffice: e.target.value })}
@@ -166,8 +186,9 @@ export function EditScheduleModal({ schedule, onSuccess, onClose }: EditSchedule
           </div>
 
           <div className="form-group">
-            <label>Notes (Opsional)</label>
+            <label htmlFor="edit-notes">Notes (Opsional)</label>
             <textarea
+              id="edit-notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Catatan tambahan..."

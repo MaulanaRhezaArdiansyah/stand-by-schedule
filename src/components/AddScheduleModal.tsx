@@ -4,12 +4,11 @@ import type { Schedule } from '../services/supabaseService';
 import './LoginModal.css';
 
 interface AddScheduleModalProps {
-  onSuccess: (newSchedule: Schedule) => void;
-  onClose: () => void;
+  readonly onSuccess: (newSchedule: Schedule) => void;
+  readonly onClose: () => void;
 }
 
 export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) {
-  // Initialize with tomorrow's date
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -59,7 +58,6 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
         notes: formData.notes
       });
 
-      // Pass the new schedule data to parent
       onSuccess({
         id: result.id,
         month,
@@ -84,24 +82,44 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+    <div
+      className="modal-overlay"
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-modal-title"
+    >
+      <div className="modal-content" style={{ maxWidth: '500px' }}>
         <div className="modal-header">
-          <h2>➕ Tambah Schedule Baru</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <h2 id="add-modal-title">Tambah Schedule Baru</h2>
+          <button className="close-btn" onClick={onClose} aria-label="Tutup">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && (
-            <div className="error-message">
-              ⚠️ {error}
+            <div className="error-message" role="alert">
+              {error}
             </div>
           )}
 
           <div className="form-group">
-            <label>Pilih Tanggal</label>
+            <label htmlFor="schedule-date">Pilih Tanggal</label>
             <input
+              id="schedule-date"
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -127,8 +145,9 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
           </div>
 
           <div className="form-group">
-            <label>Front Office</label>
+            <label htmlFor="front-office">Front Office</label>
             <input
+              id="front-office"
               type="text"
               value={formData.frontOffice}
               onChange={(e) => setFormData({ ...formData, frontOffice: e.target.value })}
@@ -138,8 +157,9 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
           </div>
 
           <div className="form-group">
-            <label>Middle Office</label>
+            <label htmlFor="middle-office">Middle Office</label>
             <input
+              id="middle-office"
               type="text"
               value={formData.middleOffice}
               onChange={(e) => setFormData({ ...formData, middleOffice: e.target.value })}
@@ -149,8 +169,9 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
           </div>
 
           <div className="form-group">
-            <label>Back Office</label>
+            <label htmlFor="back-office">Back Office</label>
             <input
+              id="back-office"
               type="text"
               value={formData.backOffice}
               onChange={(e) => setFormData({ ...formData, backOffice: e.target.value })}
@@ -160,8 +181,9 @@ export function AddScheduleModal({ onSuccess, onClose }: AddScheduleModalProps) 
           </div>
 
           <div className="form-group">
-            <label>Notes (Opsional)</label>
+            <label htmlFor="notes">Notes (Opsional)</label>
             <textarea
+              id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Catatan tambahan..."

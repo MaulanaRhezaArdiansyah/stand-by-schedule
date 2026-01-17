@@ -21,6 +21,59 @@ interface Cadangan {
   frontOffice: string
 }
 
+const MONTH_ORDER = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+// Helper functions for schedule state management
+function sortMonthsByDate(months: MonthSchedule[]): MonthSchedule[] {
+  return [...months].sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month);
+  });
+}
+
+function removeScheduleFromState(schedules: MonthSchedule[], scheduleId: string): MonthSchedule[] {
+  return schedules
+    .map(month => ({
+      ...month,
+      schedules: month.schedules.filter(s => s.id !== scheduleId)
+    }))
+    .filter(month => month.schedules.length > 0);
+}
+
+function addScheduleToState(
+  schedules: MonthSchedule[],
+  newSchedule: DaySchedule
+): MonthSchedule[] {
+  const key = `${newSchedule.month}-${newSchedule.year}`;
+  const existingMonthIndex = schedules.findIndex(m => `${m.month}-${m.year}` === key);
+
+  if (existingMonthIndex >= 0) {
+    const updated = [...schedules];
+    updated[existingMonthIndex] = {
+      ...updated[existingMonthIndex],
+      schedules: [...updated[existingMonthIndex].schedules, newSchedule].sort((a, b) => a.date - b.date)
+    };
+    return updated;
+  }
+
+  const newMonth: MonthSchedule = {
+    month: newSchedule.month,
+    year: newSchedule.year,
+    schedules: [newSchedule],
+    monthNotes: schedules[0]?.monthNotes ?? []
+  };
+
+  return sortMonthsByDate([...schedules, newMonth]);
+}
+
+function updateScheduleInState(
+  schedules: MonthSchedule[],
+  updatedSchedule: DaySchedule
+): MonthSchedule[] {
+  const withoutOld = removeScheduleFromState(schedules, updatedSchedule.id);
+  return addScheduleToState(withoutOld, updatedSchedule);
+}
+
 function App() {
   const [monthlySchedules, setMonthlySchedules] = useState<MonthSchedule[]>([])
   const [cadangan, setCadangan] = useState<Cadangan>({ backOffice: '', frontOffice: '' })
@@ -58,12 +111,7 @@ function App() {
         return acc
       }, {} as Record<string, MonthSchedule>)
 
-      // Sort months by year and month order
-      const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-      const sortedMonths = Object.values(grouped).sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year
-        return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
-      })
+      const sortedMonths = sortMonthsByDate(Object.values(grouped))
 
       // Convert backup IDs to names
       const backOfficeDev = data.developers.find(d => d.id === data.backup.backOffice)
@@ -103,14 +151,11 @@ function App() {
   }
 
   const canDeleteSchedule = (schedule: DaySchedule): boolean => {
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const scheduleMonthIndex = months.indexOf(schedule.month);
-
+    const scheduleMonthIndex = MONTH_ORDER.indexOf(schedule.month);
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
 
-    // Allow delete if schedule is in current month or future months
     if (schedule.year > currentYear) return true;
     if (schedule.year === currentYear && scheduleMonthIndex >= currentMonth) return true;
 
@@ -133,59 +178,18 @@ function App() {
     try {
       await apiService.deleteSchedule(deletingSchedule.id);
       invalidateCache();
-
-      // Optimistic update: remove schedule from state without full reload
-      setMonthlySchedules(prev =>
-        prev.map(month => ({
-          ...month,
-          schedules: month.schedules.filter(s => s.id !== deletingSchedule.id)
-        })).filter(month => month.schedules.length > 0) // Remove empty months
-      );
-
+      setMonthlySchedules(prev => removeScheduleFromState(prev, deletingSchedule.id));
       setShowDeleteModal(false);
       setDeletingSchedule(null);
     } catch (err) {
-      // On error, reload to ensure consistency
       await loadData();
       alert(err instanceof Error ? err.message : 'Failed to delete');
     }
   };
 
-  const handleAddSuccess = async (newSchedule: DaySchedule) => {
+  const handleAddSuccess = (newSchedule: DaySchedule) => {
     invalidateCache();
-
-    // Optimistic update: add new schedule to state without full reload
-    const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-    setMonthlySchedules(prev => {
-      const key = `${newSchedule.month}-${newSchedule.year}`;
-      const existingMonthIndex = prev.findIndex(m => `${m.month}-${m.year}` === key);
-
-      if (existingMonthIndex >= 0) {
-        // Month already exists, add schedule to it
-        const updated = [...prev];
-        updated[existingMonthIndex] = {
-          ...updated[existingMonthIndex],
-          schedules: [...updated[existingMonthIndex].schedules, newSchedule].sort((a, b) => a.date - b.date)
-        };
-        return updated;
-      } else {
-        // New month, create month section
-        const newMonth: MonthSchedule = {
-          month: newSchedule.month,
-          year: newSchedule.year,
-          schedules: [newSchedule],
-          monthNotes: prev[0]?.monthNotes || []
-        };
-
-        // Add and sort months
-        const updated = [...prev, newMonth].sort((a, b) => {
-          if (a.year !== b.year) return a.year - b.year;
-          return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
-        });
-        return updated;
-      }
-    });
+    setMonthlySchedules(prev => addScheduleToState(prev, newSchedule));
   }
 
   const handleEdit = (schedule: DaySchedule) => {
@@ -193,47 +197,9 @@ function App() {
     setShowEditModal(true)
   }
 
-  const handleEditSuccess = async (updatedSchedule: DaySchedule) => {
+  const handleEditSuccess = (updatedSchedule: DaySchedule) => {
     invalidateCache();
-
-    // Optimistic update: update schedule in state without full reload
-    const monthOrder = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-    setMonthlySchedules(prev => {
-      // Remove from old location
-      let schedules = prev.map(month => ({
-        ...month,
-        schedules: month.schedules.filter(s => s.id !== updatedSchedule.id)
-      })).filter(month => month.schedules.length > 0);
-
-      // Add to new location
-      const key = `${updatedSchedule.month}-${updatedSchedule.year}`;
-      const existingMonthIndex = schedules.findIndex(m => `${m.month}-${m.year}` === key);
-
-      if (existingMonthIndex >= 0) {
-        // Month already exists, add schedule to it
-        schedules[existingMonthIndex] = {
-          ...schedules[existingMonthIndex],
-          schedules: [...schedules[existingMonthIndex].schedules, updatedSchedule].sort((a, b) => a.date - b.date)
-        };
-      } else {
-        // New month, create month section
-        const newMonth: MonthSchedule = {
-          month: updatedSchedule.month,
-          year: updatedSchedule.year,
-          schedules: [updatedSchedule],
-          monthNotes: prev[0]?.monthNotes || []
-        };
-
-        schedules = [...schedules, newMonth].sort((a, b) => {
-          if (a.year !== b.year) return a.year - b.year;
-          return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
-        });
-      }
-
-      return schedules;
-    });
-
+    setMonthlySchedules(prev => updateScheduleInState(prev, updatedSchedule));
     setEditingSchedule(null);
   }
 
