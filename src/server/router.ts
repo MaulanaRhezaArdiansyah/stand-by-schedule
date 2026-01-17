@@ -63,50 +63,47 @@ function errorResponse(res: ServerResponse, status: number, message: string): vo
   jsonResponse(res, status, { error: message });
 }
 
-// Route handlers
-function handleHealthCheck(res: ServerResponse): boolean {
+// Route handlers - return void since they always handle the request
+function handleHealthCheck(res: ServerResponse): void {
   jsonResponse(res, 200, {
     status: 'ok',
     service: 'standby-scheduler',
     timestamp: new Date().toISOString()
   });
-  return true;
 }
 
-async function handleAuthVerify(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
+async function handleAuthVerify(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const authReq = req as AuthRequest;
-  if (!(await authMiddleware(authReq, res))) return true;
+  if (!(await authMiddleware(authReq, res))) return;
 
   jsonResponse(res, 200, { user: authReq.user });
-  return true;
 }
 
-async function handleGetData(res: ServerResponse): Promise<boolean> {
+async function handleGetData(res: ServerResponse): Promise<void> {
   try {
     const data = await fetchSupabaseData();
     jsonResponse(res, 200, data);
   } catch {
     errorResponse(res, 500, 'Failed to fetch data');
   }
-  return true;
 }
 
-async function handleCreateSchedule(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
+async function handleCreateSchedule(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const authReq = req as AuthRequest;
-  if (!(await requireAdmin(authReq, res))) return true;
+  if (!(await requireAdmin(authReq, res))) return;
 
   try {
     const body = await parseBody(req) as ScheduleInput;
 
     if (!body.month || !body.year || !body.date) {
       errorResponse(res, 400, 'Invalid schedule data');
-      return true;
+      return;
     }
 
     const inserted = await insertSchedule(body as Omit<Schedule, 'id'>);
     if (!inserted) {
       errorResponse(res, 500, 'Failed to insert schedule to Supabase');
-      return true;
+      return;
     }
 
     invalidateCache();
@@ -116,12 +113,11 @@ async function handleCreateSchedule(req: IncomingMessage, res: ServerResponse): 
   } catch {
     errorResponse(res, 500, 'Internal server error');
   }
-  return true;
 }
 
-async function handleUpdateSchedule(req: IncomingMessage, res: ServerResponse, scheduleId: string): Promise<boolean> {
+async function handleUpdateSchedule(req: IncomingMessage, res: ServerResponse, scheduleId: string): Promise<void> {
   const authReq = req as AuthRequest;
-  if (!(await requireAdmin(authReq, res))) return true;
+  if (!(await requireAdmin(authReq, res))) return;
 
   try {
     const updates = await parseBody(req) as Partial<Schedule>;
@@ -129,7 +125,7 @@ async function handleUpdateSchedule(req: IncomingMessage, res: ServerResponse, s
     const updated = await updateScheduleDB(scheduleId, updates);
     if (!updated) {
       errorResponse(res, 500, 'Failed to update schedule in Supabase');
-      return true;
+      return;
     }
 
     invalidateCache();
@@ -139,18 +135,17 @@ async function handleUpdateSchedule(req: IncomingMessage, res: ServerResponse, s
   } catch {
     errorResponse(res, 500, 'Internal server error');
   }
-  return true;
 }
 
-async function handleDeleteSchedule(req: IncomingMessage, res: ServerResponse, scheduleId: string): Promise<boolean> {
+async function handleDeleteSchedule(req: IncomingMessage, res: ServerResponse, scheduleId: string): Promise<void> {
   const authReq = req as AuthRequest;
-  if (!(await requireAdmin(authReq, res))) return true;
+  if (!(await requireAdmin(authReq, res))) return;
 
   try {
     const success = await deleteScheduleDB(scheduleId);
     if (!success) {
       errorResponse(res, 500, 'Failed to delete schedule from Supabase');
-      return true;
+      return;
     }
 
     invalidateCache();
@@ -160,10 +155,9 @@ async function handleDeleteSchedule(req: IncomingMessage, res: ServerResponse, s
   } catch {
     errorResponse(res, 500, 'Internal server error');
   }
-  return true;
 }
 
-// Main request handler
+// Main request handler - returns true if handled, false if not
 export async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
   setCORS(res);
 
@@ -179,29 +173,35 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
   // Route matching
   if (url === '/health' || url === '/') {
-    return handleHealthCheck(res);
+    handleHealthCheck(res);
+    return true;
   }
 
   if (url === '/api/auth/verify' && method === 'GET') {
-    return handleAuthVerify(req, res);
+    await handleAuthVerify(req, res);
+    return true;
   }
 
   if (url === '/api/data' && method === 'GET') {
-    return handleGetData(res);
+    await handleGetData(res);
+    return true;
   }
 
   if (url === '/api/schedules' && method === 'POST') {
-    return handleCreateSchedule(req, res);
+    await handleCreateSchedule(req, res);
+    return true;
   }
 
   if (url.startsWith('/api/schedules/') && method === 'PUT') {
     const scheduleId = url.split('/')[3];
-    return handleUpdateSchedule(req, res, scheduleId);
+    await handleUpdateSchedule(req, res, scheduleId);
+    return true;
   }
 
   if (url.startsWith('/api/schedules/') && method === 'DELETE') {
     const scheduleId = url.split('/')[3];
-    return handleDeleteSchedule(req, res, scheduleId);
+    await handleDeleteSchedule(req, res, scheduleId);
+    return true;
   }
 
   return false;

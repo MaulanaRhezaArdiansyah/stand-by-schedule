@@ -259,8 +259,8 @@ function App() {
 
       <div className="layout">
         <main className="main">
-          {monthlySchedules.map((monthSchedule, monthIdx) => (
-            <div key={monthIdx} className="month-section">
+          {monthlySchedules.map((monthSchedule) => (
+            <div key={`${monthSchedule.month}-${monthSchedule.year}`} className="month-section">
               <div className="month-header">
                 <h2>{monthSchedule.month} {monthSchedule.year}</h2>
               </div>
@@ -332,8 +332,8 @@ function App() {
 
           <div className="notes-section">
             <h3>Catatan Penting</h3>
-            {monthlySchedules[0]?.monthNotes?.map((note, idx) => (
-              <div key={idx} className="note-item">
+            {monthlySchedules[0]?.monthNotes?.map((note) => (
+              <div key={note} className="note-item">
                 <span className="note-icon">⚠️</span>
                 <p>{note}</p>
               </div>

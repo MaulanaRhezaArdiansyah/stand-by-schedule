@@ -85,7 +85,7 @@ function pickLatestYearMonth(rows: Array<{ year: number; month: string }>): { ye
   if (!rows.length) return null
   return rows
     .slice()
-    .sort((a, b) => (a.year !== b.year ? b.year - a.year : monthIndex(b.month) - monthIndex(a.month)))[0]
+    .sort((a, b) => (a.year === b.year ? monthIndex(b.month) - monthIndex(a.month) : b.year - a.year))[0]
 }
 
 /**

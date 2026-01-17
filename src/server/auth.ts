@@ -5,10 +5,12 @@ export interface AuthRequest extends IncomingMessage {
   user?: { id: string; email?: string }
 }
 
-const adminEmails = (process.env.ADMIN_EMAILS || '')
-  .split(',')
-  .map(s => s.trim().toLowerCase())
-  .filter(Boolean)
+const adminEmails = new Set(
+  (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+)
 
 export async function authMiddleware(req: AuthRequest, res: ServerResponse): Promise<boolean> {
   const authHeader = req.headers.authorization || ''
@@ -41,7 +43,7 @@ export async function requireAdmin(req: AuthRequest, res: ServerResponse): Promi
 
   // kalau kamu mau whitelist admin:
   const email = (req.user?.email || '').toLowerCase()
-  if (!email || !adminEmails.includes(email)) {
+  if (!email || !adminEmails.has(email)) {
     res.writeHead(403, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'Forbidden - Admin access required' }))
     return false
