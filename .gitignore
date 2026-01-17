@@ -31,3 +31,6 @@ dist-ssr
 
 # Temporary files
 tmpclaude-*
+
+# Claude Code
+.claude/
