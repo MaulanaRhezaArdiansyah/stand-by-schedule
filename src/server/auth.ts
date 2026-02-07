@@ -45,11 +45,14 @@ export async function requireAdmin(req: AuthRequest, res: ServerResponse): Promi
   // kalau kamu mau whitelist admin:
   const email = (req.user?.email || '').toLowerCase()
   const hasEmail = adminEmails.has(email)
-  console.log({
-    email,
-    adminEmails,
-    hasEmail
-  })
+  alert(email)
+  alert(adminEmails)
+  alert(hasEmail)
+  // console.log({
+    // email,
+    // adminEmails,
+    // hasEmail
+  // })
   if (!email || !adminEmails.has(email)) {
     res.writeHead(403, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'Forbidden - Admin access required' }))
