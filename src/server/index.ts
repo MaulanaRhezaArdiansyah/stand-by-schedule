@@ -44,6 +44,8 @@ async function main() {
     console.log(`   - Health: http://localhost:${PORT}/health`)
     console.log(`   - Login:  http://localhost:${PORT}/api/auth/login`)
     console.log(`   - Data:   http://localhost:${PORT}/api/data`)
+    console.log(`   - Devs:   http://localhost:${PORT}/api/developers`)
+    console.log(`   - Sched:  http://localhost:${PORT}/api/schedules`)
   })
 
   // Verify email configuration (optional - don't block server startup)

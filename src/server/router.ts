@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { fetchSupabaseData, invalidateCache } from './supabaseService.js';
+import { fetchSupabaseData, getDevelopers, getSchedules, invalidateCache } from './supabaseService.js';
 import { insertSchedule, updateSchedule as updateScheduleDB, deleteSchedule as deleteScheduleDB } from './supabaseUpdater.js';
 import type { Schedule } from './supabaseService.js';
 import { setSchedulesData } from '../services/scheduler.js';
@@ -85,6 +85,24 @@ async function handleGetData(res: ServerResponse): Promise<void> {
     jsonResponse(res, 200, data);
   } catch {
     errorResponse(res, 500, 'Failed to fetch data');
+  }
+}
+
+async function handleGetDevelopers(res: ServerResponse): Promise<void> {
+  try {
+    const developers = await getDevelopers();
+    jsonResponse(res, 200, { developers });
+  } catch {
+    errorResponse(res, 500, 'Failed to fetch developers');
+  }
+}
+
+async function handleGetSchedules(res: ServerResponse): Promise<void> {
+  try {
+    const schedules = await getSchedules();
+    jsonResponse(res, 200, { schedules });
+  } catch {
+    errorResponse(res, 500, 'Failed to fetch schedules');
   }
 }
 
@@ -184,6 +202,16 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
 
   if (url === '/api/data' && method === 'GET') {
     await handleGetData(res);
+    return true;
+  }
+
+  if (url === '/api/developers' && method === 'GET') {
+    await handleGetDevelopers(res);
+    return true;
+  }
+
+  if (url === '/api/schedules' && method === 'GET') {
+    await handleGetSchedules(res);
     return true;
   }
 
