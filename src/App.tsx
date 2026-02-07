@@ -359,7 +359,7 @@ function App() {
 
               <div className="reminder-item">
                 <div className="reminder-time">
-                  <span className="time-badge h-day">06:00 WIB</span>
+                  <span className="time-badge h-day">05:00 WIB</span>
                   <span className="day-label">Hari H</span>
                 </div>
                 <p className="reminder-desc">
