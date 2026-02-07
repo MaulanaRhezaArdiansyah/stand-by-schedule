@@ -38,11 +38,18 @@ export async function requireAdmin(req: AuthRequest, res: ServerResponse): Promi
   const ok = await authMiddleware(req, res)
   if (!ok) return false
 
-  // kalau kamu mau "login saja boleh edit", cukup return true di sini.
-  // return true
+  // if (adminEmails.size === 0) {
+  //   return true
+  // }
 
   // kalau kamu mau whitelist admin:
   const email = (req.user?.email || '').toLowerCase()
+  const hasEmail = adminEmails.has(email)
+  console.log({
+    email,
+    adminEmails,
+    hasEmail
+  })
   if (!email || !adminEmails.has(email)) {
     res.writeHead(403, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'Forbidden - Admin access required' }))
