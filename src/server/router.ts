@@ -107,7 +107,10 @@ async function handleGetSchedules(res: ServerResponse): Promise<void> {
 }
 
 async function handleCreateSchedule(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  console.log('start')
   const authReq = req as AuthRequest;
+  console.log(authReq)
+  console.log(await requireAdmin(authReq, res))
   if (!(await requireAdmin(authReq, res))) return;
 
   try {
