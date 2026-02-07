@@ -50,18 +50,18 @@ async function main() {
 
   // Verify email configuration (optional - don't block server startup)
   console.log('\n📧 Verifying email configuration...')
-  try {
-    const isEmailValid = await verifyEmailConfig()
-    if (isEmailValid) {
-      console.log('✅ Email configuration verified')
-    } else {
-      console.warn('⚠️  Email configuration might be invalid.')
-      console.warn('   Scheduler will continue but email sending may fail.')
-    }
-  } catch (error) {
-    console.warn('⚠️  Email verification failed:', error instanceof Error ? error.message : String(error))
-    console.warn('   Scheduler will continue but email sending may fail.')
-  }
+  // try {
+  //   const isEmailValid = await verifyEmailConfig()
+  //   if (isEmailValid) {
+  //     console.log('✅ Email configuration verified')
+  //   } else {
+  //     console.warn('⚠️  Email configuration might be invalid.')
+  //     console.warn('   Scheduler will continue but email sending may fail.')
+  //   }
+  // } catch (error) {
+  //   console.warn('⚠️  Email verification failed:', error instanceof Error ? error.message : String(error))
+  //   console.warn('   Scheduler will continue but email sending may fail.')
+  // }
 
   // Load schedules data from Supabase
   console.log('\n📅 Loading schedules data from Supabase...')
