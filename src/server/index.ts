@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { startSchedulers, setSchedulesData } from '../services/scheduler.js'
-import { verifyEmailConfig } from '../services/emailService.js'
+// import { verifyEmailConfig } from '../services/emailService.js'
 import { createServer } from 'node:http'
 import { fetchSupabaseData } from './supabaseService.js'
 import { handleRequest } from './router.js'
