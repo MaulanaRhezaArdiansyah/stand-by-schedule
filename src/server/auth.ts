@@ -36,6 +36,7 @@ export async function authMiddleware(req: AuthRequest, res: ServerResponse): Pro
 
 export async function requireAdmin(req: AuthRequest, res: ServerResponse): Promise<boolean> {
   const ok = await authMiddleware(req, res)
+  alert(ok)
   if (!ok) return false
 
   // if (adminEmails.size === 0) {
