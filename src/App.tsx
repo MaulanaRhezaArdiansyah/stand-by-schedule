@@ -352,7 +352,7 @@ function App() {
                   Reminder dikirim ke developer yang stand by <strong>besok</strong> via:
                 </p>
                 <div className="channel-badges">
-                  <span className="channel-badge email">📧 Email</span>
+                  {/* <span className="channel-badge email">📧 Email</span> */}
                   <span className="channel-badge whatsapp">💬 WhatsApp</span>
                 </div>
               </div>
@@ -366,7 +366,7 @@ function App() {
                   Reminder dikirim ke developer yang stand by <strong>hari ini</strong> via:
                 </p>
                 <div className="channel-badges">
-                  <span className="channel-badge email">📧 Email</span>
+                  {/* <span className="channel-badge email">📧 Email</span> */}
                   <span className="channel-badge whatsapp">💬 WhatsApp</span>
                 </div>
               </div>
